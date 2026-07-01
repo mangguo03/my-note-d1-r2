@@ -1540,12 +1540,22 @@
             const a = document.createElement('a'); a.download = `${title}.${formatType}`; a.href = url; a.click(); window.URL.revokeObjectURL(url);
         }
          
-        function handleLocalImageUpload(event) {
+        async function handleLocalImageUpload(event) {
             const files = event.target.files; if (!files || files.length === 0) return;
-            const editor = document.getElementById('note-editor-richtext'); if (editor) editor.focus(); 
+            const editor = document.getElementById('note-editor-richtext'); if (editor) editor.focus();
             
-            Array.from(files).forEach(file => {
-                if (!file.type.startsWith('image/')) { return; }
+            // 记录当前光标位置，防止上传请求异步等待时，光标丢失
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+            const savedRange = selection.getRangeAt(0).cloneRange();
+
+            // 为了用户体验，上传前可以给个提示
+            const originalBtnText = document.querySelector('button[title="插入图片"]').innerHTML;
+            document.querySelector('button[title="插入图片"]').innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> 上传中`;
+
+            for (let file of Array.from(files)) {
+                if (!file.type.startsWith('image/')) continue;
+
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const img = new Image();
@@ -1566,21 +1576,57 @@
                         
                         ctx.fillStyle = "#ffffff";
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
-                        
                         ctx.drawImage(img, 0, 0, width, height);
 
-                        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.9);
-                        
-                        // 🚨 核心修复：1. 删除了重复的行；2. 使用 <div> 完美包裹，彻底解决连体婴、光标乱跳、缩进不了的问题！
-                        const imgHTML = `<div style="text-align: left;">&#8203;<span class="custom-img-wrapper locked" contenteditable="false" draggable="true" ondragstart="window.imgDragStart(event)" ondragend="window.imgDragEnd(event)"><img src="${compressedBase64}" alt="图片" /><span class="img-lock-btn locked" title="${t('title-unlock')}" data-i18n-title="title-unlock" contenteditable="false"><i class="fa-solid fa-lock"></i></span></span></div><div><br></div>`;
-                        
-                        execCmd('insertHTML', imgHTML);
+                        // 将画布转换为 Blob 数据，准备上传给 R2
+                        canvas.toBlob(async (blob) => {
+                            if (!blob) return;
+                            
+                            // 构建表单数据
+                            const formData = new FormData();
+                            formData.append('file', blob, 'upload.jpg');
+
+                            try {
+                                // 💡 重点：向后端的 R2 上传接口发起请求 (附带账号验证)
+                                const uploadRes = await fetch('/api/upload-image', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': 'Basic ' + btoa(unescape(encodeURIComponent(cfUser + ':' + cfPass)))
+                                        // 注意：FormData 会自动设置 Content-Type，这里不要手动加 Content-Type
+                                    },
+                                    body: formData
+                                });
+                                
+                                const uploadData = await uploadRes.json();
+                                
+                                if (uploadRes.ok && uploadData.success && uploadData.url) {
+                                    // 恢复光标位置
+                                    selection.removeAllRanges();
+                                    selection.addRange(savedRange);
+
+                                    // 获取后端 R2 返回的真实图片 URL
+                                    const imgUrl = uploadData.url;
+                                    
+                                    // 插入带有真实网络链接的图片
+                                    const imgHTML = `<div style="text-align: left;">&#8203;<span class="custom-img-wrapper locked" contenteditable="false" draggable="true" ondragstart="window.imgDragStart(event)" ondragend="window.imgDragEnd(event)"><img src="${imgUrl}" alt="图片" /><span class="img-lock-btn locked" title="${t('title-unlock')}" data-i18n-title="title-unlock" contenteditable="false"><i class="fa-solid fa-lock"></i></span></span></div><div><br></div>`;
+                                    
+                                    execCmd('insertHTML', imgHTML);
+                                } else {
+                                    alert("图片上传失败：" + (uploadData.message || "未知错误"));
+                                }
+                            } catch (err) {
+                                alert("图片上传网络异常，请重试！");
+                            }
+                        }, 'image/jpeg', 0.9);
                     };
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
-            });
+            }
+            
             event.target.value = '';
+            // 恢复按钮状态
+            document.querySelector('button[title="插入图片"]').innerHTML = originalBtnText;
         }
 
         if ('serviceWorker' in navigator) {
