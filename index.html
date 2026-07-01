@@ -750,12 +750,15 @@
                     if (dict.en) dict.en['app-title'] = data.appName;
                 }
 
+                // 👇 确保这段代码的上下大括号是闭合的
                 if (data.categories && data.categories.length > 0) {
-                    if (typeof data.categories[0] === 'string') { categories = data.categories.map(c => ({ id: c, name: c, parentId: null })); } 
-                    else { categories = data.categories; }
+                    if (typeof data.categories[0] === 'string') { 
+                        categories = data.categories.map(c => ({ id: c, name: c, parentId: null })); 
+                    } else { 
+                        categories = data.categories; 
+                    }
                 }
                 
-                // 👇 终极防线：如果文件夹被清空了，强制恢复基础分类，防止界面崩溃
                 if (categories.length === 0) {
                     categories = [
                         { id: "未分类", name: "未分类", parentId: null },
@@ -763,6 +766,7 @@
                         { id: "生活", name: "生活", parentId: null }
                     ];
                 }
+                
                 if (data.categoryColors) categoryColors = data.categoryColors;
                 if (data.trashBin) trashBin = data.trashBin;
                 if (data.folderTreeRelations) folderTreeRelations = data.folderTreeRelations;
