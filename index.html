@@ -1188,7 +1188,7 @@
             let parentId = null;
             if (currentFilterCategory !== "全部") { parentId = currentFilterCategory; } 
             else {
-                if(confirm("需要将此新文件夹作为当前高亮目录下级子文件夹吗？") && activeNoteId) {
+                if(confirm("是创建当前目录下的子文件夹吗？是点"确定"，不是点"取消") && activeNoteId) {
                     const currentNote = notes.find(n => n.id === activeNoteId);
                     if(currentNote) parentId = currentNote.category;
                 }
