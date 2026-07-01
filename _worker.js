@@ -91,6 +91,101 @@ export default {
         }
 
         // ==========================================
+        // 4. D1 功能：账号注册 (/api/register)
+        // ==========================================
+        if (url.pathname === '/api/register' && request.method === 'POST') {
+            try {
+                const { username, password } = await request.json();
+                if (!username || !password) return Response.json({ success: false, message: "账号或密码不能为空" }, { headers: corsHeaders });
+
+                // 检查数据库里有没有这个账号
+                const existUser = await env.DB.prepare("SELECT * FROM users WHERE username = ?").bind(username).first();
+                if (existUser) {
+                    return Response.json({ success: false, message: "账号已存在，请直接登入" }, { headers: corsHeaders });
+                }
+
+                // 写入新账号到 users 表
+                await env.DB.prepare("INSERT INTO users (username, password) VALUES (?, ?)").bind(username, password).run();
+                
+                return Response.json({ success: true, message: "注册成功" }, { headers: corsHeaders });
+            } catch (err) {
+                return Response.json({ success: false, message: err.message }, { headers: corsHeaders });
+            }
+        }
+
+        // ==========================================
+        // 5. D1 功能：账号登录 (/api/login)
+        // ==========================================
+        if (url.pathname === '/api/login' && request.method === 'POST') {
+            try {
+                const { username, password } = await request.json();
+                
+                // 去数据库比对账号密码
+                const user = await env.DB.prepare("SELECT * FROM users WHERE username = ? AND password = ?").bind(username, password).first();
+                
+                if (user) {
+                    return Response.json({ success: true, message: "登入成功" }, { headers: corsHeaders });
+                } else {
+                    return Response.json({ success: false, message: "账号或密码错误" }, { headers: corsHeaders });
+                }
+            } catch (err) {
+                return Response.json({ success: false, message: err.message }, { headers: corsHeaders });
+            }
+        }
+
+        // ==========================================
+        // 6. D1 功能：读取云端日记数据 (/api/sync GET)
+        // ==========================================
+        if (url.pathname === '/api/sync' && request.method === 'GET') {
+            try {
+                const authHeader = request.headers.get('Authorization');
+                if (!authHeader) return new Response("未授权", { status: 401, headers: corsHeaders });
+                
+                const base64Credentials = authHeader.split(' ')[1];
+                const [username, password] = atob(base64Credentials).split(':');
+
+                // 验证身份
+                const user = await env.DB.prepare("SELECT * FROM users WHERE username = ? AND password = ?").bind(username, password).first();
+                if (!user) return new Response("未授权", { status: 401, headers: corsHeaders });
+
+                // 从数据库拉取属于这个账号的数据
+                const dataRow = await env.DB.prepare("SELECT * FROM user_data WHERE username = ?").bind(username).first();
+                
+                let responseData = { notes: [], categories: [], trashBin: [] };
+                
+                if (dataRow) {
+                    responseData.notes = JSON.parse(dataRow.notes_json || '[]');
+                    responseData.categories = JSON.parse(dataRow.categories_json || '[]');
+                    responseData.trashBin = JSON.parse(dataRow.trash_json || '[]');
+                }
+                
+                return Response.json(responseData, { headers: corsHeaders });
+            } catch (err) {
+                return Response.json({ success: false, message: err.message }, { headers: corsHeaders });
+            }
+        }
+
+        // ==========================================
+        // 7. D1 功能：注销删除账号 (/api/delete-account)
+        // ==========================================
+        if (url.pathname === '/api/delete-account' && request.method === 'POST') {
+            try {
+                const authHeader = request.headers.get('Authorization');
+                if (!authHeader) return new Response("未授权", { status: 401, headers: corsHeaders });
+                const base64Credentials = authHeader.split(' ')[1];
+                const [username] = atob(base64Credentials).split(':');
+
+                // 将账号和日记数据双双从数据库物理删除
+                await env.DB.prepare("DELETE FROM users WHERE username = ?").bind(username).run();
+                await env.DB.prepare("DELETE FROM user_data WHERE username = ?").bind(username).run();
+                
+                return Response.json({ success: true, message: "账号已彻底注销" }, { headers: corsHeaders });
+            } catch (err) {
+                return Response.json({ success: false, message: err.message }, { headers: corsHeaders });
+            }
+        }
+        
+        // ==========================================
         // 3. 把剩下的工作交还给前端 (加载你的 HTML 界面)
         // ==========================================
         // 如果请求的不是 /api 接口，就自动去加载你的 index.html 网页文件
