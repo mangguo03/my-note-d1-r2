@@ -91,8 +91,13 @@ export default {
         }
 
         // ==========================================
-        // 3. 基础页面或 404 处理
+        // 3. 把剩下的工作交还给前端 (加载你的 HTML 界面)
         // ==========================================
-        return new Response("芒果记云端 API 服务已启动", { headers: corsHeaders });
+        // 如果请求的不是 /api 接口，就自动去加载你的 index.html 网页文件
+        try {
+            return await env.ASSETS.fetch(request);
+        } catch (e) {
+            return new Response("前端网页加载失败，请确保你的代码仓库里有 index.html 文件。", { status: 404 });
+        }
     }
 };
