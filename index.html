@@ -161,7 +161,8 @@
                 
                 <div class="px-2 py-1.5 flex flex-nowrap items-center justify-between gap-1 border-b border-slate-200 dark:border-slate-800 relative z-[80] overflow-x-auto w-full" style="scrollbar-width: none; -ms-overflow-style: none;">
                     
-              
+                    <div class="flex items-center gap-1 flex-nowrap flex-shrink-0">
+                        
                         <button id="btn-new-note" onclick="createNewNote()" class="px-2 py-0.5 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-file-lines"></i> <span data-i18n="btn-new-note">新笔记</span></button>
                         <button onclick="createNewCategory()" class="px-2 py-0.5 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-folder-plus"></i> <span data-i18n="btn-new-folder">新分类</span></button>
                         
@@ -308,7 +309,9 @@
                         <div class="h-4 w-[1px] bg-slate-300 dark:bg-slate-600 mx-0.5"></div>
                         <button onmousedown="event.preventDefault();" onclick="wrapHTML('<code>', '</code>')" class="px-2 py-0.5 text-[11px] font-mono text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded border border-slate-200 dark:border-slate-600" title="代码块"><i class="fa-solid fa-code text-rose-500"></i></button>
                         
-                        <i class="fa-solid fa-eraser bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent"></i>
+                        <button onmousedown="event.preventDefault();" onclick="clearAllFormat()" class="px-2 py-0.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded border border-slate-200 dark:border-slate-600" title="清除格式 (橡皮擦)">
+                               <i class="fa-solid fa-eraser bg-gradient-to-tr from-pink-500 via-purple-500 to-cyan-500 bg-clip-text text-transparent"></i>
+                        </button>
                         
                         <button onmousedown="event.preventDefault(); document.getElementById('local-img-input').click()" class="px-2 py-0.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-700 rounded border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-slate-700" title="插入图片" data-i18n-title="title-img"><span data-i18n="fmt-img">图</span></button>
                         
