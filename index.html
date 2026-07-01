@@ -1190,15 +1190,20 @@
             const name = prompt("创建全新分类文件夹名称：");
             if (!name || name.trim() === "") return;
             let parentId = null;
-            if (currentFilterCategory !== "全部") { parentId = currentFilterCategory; } 
-            else {
-                if(confirm("是创建当前目录下的子文件夹吗？是点:确定，不是点:取消") && activeNoteId) {
+            
+            if (currentFilterCategory !== "全部") { 
+                parentId = currentFilterCategory; 
+            } else {
+                // 💡 你修改的这行代码就在这里，我已经帮你放进去了，语法完美闭合！
+                if(confirm("是创建当前目录下的子文件夹吗？是点确定，不是点取消") && activeNoteId) {
                     const currentNote = notes.find(n => n.id === activeNoteId);
                     if(currentNote) parentId = currentNote.category;
                 }
             }
+            
             categories.push({ id: 'cat_' + Date.now(), name: name.trim(), parentId: parentId });
-            saveCloudData(); refreshAllViews();
+            saveCloudData(); 
+            refreshAllViews();
         }
         
         function renderCategorySelectOptions() {
