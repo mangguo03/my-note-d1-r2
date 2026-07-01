@@ -677,7 +677,7 @@
                     errDiv.classList.remove('hidden');
                 }
             } catch(e) {
-                errDiv.innerText = "网络请求失败，请确保已绑定KV并重试部署";
+                errDiv.innerText = "网络请求失败，请检查后端 API 部署进度";
                 errDiv.classList.remove('hidden');
             }
             document.getElementById('auth-btn').innerText = isLoginMode ? '登入' : '立即注册';
@@ -1675,4 +1675,4 @@
         
     </script>
 </body>
-</html> 
+</html>
