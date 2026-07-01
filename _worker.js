@@ -40,9 +40,10 @@ export default {
                     httpMetadata: { contentType: file.type }
                 });
 
-                // 💡 替换成你 R2 存储桶绑定的公开域名 (比如 r2.dev 域名或自定义域名)
-                const R2_PUBLIC_DOMAIN = "https://pub-你的专属地址.r2.dev"; 
-                const publicUrl = `${R2_PUBLIC_DOMAIN}/${uniqueFilename}`;
+                // 🚀 从 Cloudflare 环境变量中读取你在后台配置的域名
+                // 如果后台没配置，就给个默认的回退提示，防止报错
+                const domain = env.R2_PUBLIC_DOMAIN || "https://未配置环境变量"; 
+                const publicUrl = `${domain}/${uniqueFilename}`;
                 
                 return Response.json({ success: true, url: publicUrl }, { headers: corsHeaders });
             } catch (err) {
