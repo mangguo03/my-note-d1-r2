@@ -751,7 +751,7 @@
                     if (dict.en) dict.en['app-title'] = data.appName;
                 }
 
-                // 1. 无论如何，先把云端的数据安全地接收过来
+                // 1. 处理文件夹 (Categories) 数据
                 if (data.categories) {
                     if (data.categories.length > 0 && typeof data.categories[0] === 'string') { 
                         categories = data.categories.map(c => ({ id: c, name: c, parentId: null })); 
@@ -760,76 +760,95 @@
                     }
                 }
                 
-                // 2. 终极安全检查：如果 categories 是未定义(undefined) 或者是 空数组(length === 0)
+                // 2. 文件夹保底机制
                 if (!categories || categories.length === 0) {
                     categories = [
                         { id: "未分类", name: "未分类", parentId: null },
                         { id: "工作", name: "工作", parentId: null },
                         { id: "生活", name: "生活", parentId: null }
                     ];
-                    
-                    // 💡 可选：如果你有 saveCloudData() 函数，这里可以调用一下，
-                    // 这样就能把这三个默认文件夹立刻保存到云端，防止刷新后又要重新生成。
-                    if (typeof saveCloudData === 'function') {
-                        saveCloudData();
-                    }
                 }
                 
-                // 👇 🌟 新增：检测并强行注入无法删除的系统默认笔记
+                // 3. 🚨 核心修复：必须先把云端的日记数据接住，防止新账号崩溃
+                if (data.notes) {
+                    notes = data.notes;
+                } else if (!notes) {
+                    notes = [];
+                }
+                
+                // 👇 🌟 强行注入系统默认说明笔记
                 const hasDefaultNote = notes.some(n => n.id === 'system_default_instruction');
                 if (!hasDefaultNote) {
                     notes.push({
                         id: 'system_default_instruction',
-                        title: '🛠️ 轻云记功能指南与使用说明',
-                        content: `欢迎使用轻云记！这是一份内置的系统说明文档：<br><br>
+                        title: '🛠️ 芒果记功能指南与使用说明',
+                        category: '未分类',
+                        content: `欢迎使用芒果记！这是一份内置的系统说明文档：<br><br>
 
 <b>1. 隐私承诺</b><br>
-轻笔记是一款轻量级、可完全自托管的个人笔记系统。您的所有数据仅存储在您自己的设备上，完全由您自行管理和控制，系统不依赖任何第三方云服务。<br><br>
+芒果记是一款轻量级、可完全自托管的个人笔记系统。您的所有数据仅存储在您自己的设备与您绑定的云端上，完全由您自行管理和控制，系统不依赖任何不受控的第三方云服务。<br><br>
 
 <b>2. 数据收集</b><br>
 由于是轻量级自托管系统，所有数据都在您的完全控制范围内，不会被任何第三方访问。<br><br>
 
 <b>3. 数据备份</b><br>
-• <b>云端代码部署 </b>：如果提示云端数据加载失败，项目尝试去连接后台（Cloudflare）拉取数据，但网络没通或者后台没配置好，拿不到数据，如是网络问题，多刷新几次，如是后台问题，检测配置。<br>
-• <b>本地版本代码部署 </b>：如果出现项目更新不同步，则是项目依然读取到浏览器保存的上一版本的缓存。若刷新无变化，导出数据，注销账号，重新注册添加数据。因为数据只存在你的这台电脑、浏览器的缓存里，没有任何云端备份。一旦执行了这步操作，数据就物理消失，无法通过软件内的任何功能恢复。<br>
-• <b>数据备份 </b>：请不定时导出您的数据，养成多平台保存数据的习惯。<br><br>
+• <b>云端代码部署 </b>：如果提示云端数据加载失败，说明项目尝试连接后台（Cloudflare）拉取数据失败。可能是网络不通或后台配置有误。如是网络问题，请多刷新几次；如是配置问题，请检查后台环境变量。<br>
+• <b>本地版本异常 </b>：如果出现项目更新不同步，可能是读取了旧版缓存。若刷新无变化，请导出数据，注销账号，重新注册并导入。请注意：若未绑定云端，数据仅存在浏览器缓存中，一旦清除缓存数据将物理消失。<br>
+• <b>数据备份 </b>：请不定时导出您的数据，养成多重备份的好习惯。<br><br>
 
 <b>4. 快速上手指南</b><br>
-• <b>创建笔记 </b>：点击置顶栏的"新笔记"按钮即可创建新笔记。支持 Markdown 语法，输入语法即能马上展示语法效果。<br>
-• <b>整理笔记 </b>：使用分类和标签来组织您的笔记。分类提供层级结构，构建清晰的知识体系；标签提供多维度关联，快速定位相关内容。可随意拖动文件夹、笔记归档。<br>
-• <b>导入导出 </b>：支持导入导出多层级文件夹与笔记，导出文件夹是压缩包，导入文件夹为文件夹形式导入。<br>
-• <b>撤销重做 </b>：在当前编辑页一键实现无数层撤销重做。<br>
-• <b>搜索笔记 </b>：支持关键词搜索、快速查找。<br>
-• <b>历史记录 </b>：支持历史记录预览、删除、恢复。<br>
-• <b>橡皮擦 </b>：【清除格式】（橡皮擦）按钮不仅能清除颜色，还能把一级标题、无序列表全部打回普通文本。<br>
-• <b>插入图片 </b>：插入图片默认是上锁状态，无法缩放图片，可长按拖放图标，右键点击弹出折叠功能：下载、复制、剪切、删除。点击解锁后可缩放图片。<br>
-• <b>注销账号 </b>：将消除所有笔记缓存，请提前导出备份好笔记。<br><br>
+• <b>创建笔记 </b>：点击侧边栏的"新建"按钮即可创建。支持 Markdown 语法，实时渲染展示。<br>
+• <b>整理笔记 </b>：使用分类来组织您的笔记。分类提供层级结构，构建清晰的知识体系。<br>
+• <b>导入导出 </b>：支持导入导出多层级文件夹与笔记，确保数据自由流转。<br>
+• <b>橡皮擦 </b>：【清除格式】按钮不仅能清除颜色，还能把标题、列表等格式一键打回纯文本。<br>
+• <b>插入图片 </b>：通过自带图床极速上传。点击图片解锁后可自由缩放。<br>
+• <b>注销账号 </b>：将彻底消除云端和本地的所有数据，请提前导出备份！<br><br>
 
 <b>5. 版权说明</b><br>
-• <b>软件许可 </b>：这是一款轻量级、可完全自托管的个人笔记系统。您可以自由使用、修改和分发本软件，但需要遵守相关的开源许可协议。系统专为注重隐私、安全与可控性的用户设计。<br>
-• <b>知识产权 </b>：本软件的源代码、文档和相关资源受版权法保护。在遵守许可协议的前提下，您可以使用和修改这些内容。所有数据仅存储在您自己的服务器中，确保完全的数据所有权。<br>
-• <b>免责声明 </b>：本软件按"现状"提供，不提供任何明示或暗示的保证。使用本软件的风险由用户自行承担。作为自托管系统，您拥有完全的控制权和责任。`,
-                        category: '未分类',
-                        updatedAt: Date.now()
+• <b>软件许可 </b>：这是一款轻量级、可完全自托管的个人笔记系统。您可以自由使用，专为注重隐私、安全与可控性的用户设计。<br>
+• <b>免责声明 </b>：本软件按"现状"提供。作为自托管系统，您对数据的安全与备份拥有完全的控制权和绝对的责任。`,
+                        updatedAt: Date.now(),
+                        createdAt: Date.now() // 补充创建时间，避免排序报错
                     });
+                    
+                    if (typeof saveCloudData === 'function') {
+                        saveCloudData();
+                    }
                 }
-                // 👆 🌟 新增结束
-
-                refreshAllViews();
                 
+                // 4. 🚨 恢复被遗漏的其他重要数据配置
+                if (data.categoryColors) categoryColors = data.categoryColors;
+                if (data.trashBin) trashBin = data.trashBin;
+                if (data.folderTreeRelations) folderTreeRelations = data.folderTreeRelations;
+                if (data.leftExpandedFolders) leftExpandedFolders = data.leftExpandedFolders;
+
+                // 5. 喊“上菜”！刷新所有界面
+                if (typeof refreshAllViews === 'function') {
+                    refreshAllViews();
+                } else {
+                    if (typeof renderCategories === 'function') renderCategories();
+                    if (typeof renderNotesList === 'function') renderNotesList();
+                }
+                
+                // 6. 默认打开最新笔记或新建笔记
                 if (notes.length > 0) {
                     const sorted = [...notes].sort((a,b) => b.updatedAt - a.updatedAt);
-                    openNote(sorted[0].id);
+                    // 确保 openNote 函数存在再调用
+                    if (typeof openNote === 'function') openNote(sorted[0].id);
                 } else {
-                    createNewNote();
+                    if (typeof createNewNote === 'function') createNewNote();
                 }
+                
             } catch (error) {
+                console.error("加载失败详细信息:", error);
                 alert("🚨 云端数据加载失败！为防止数据被异常覆盖，已锁定自动保存功能。请检查网络并重启软件。");
-                document.getElementById('note-editor-richtext').innerHTML = "<h2 style='color:red; text-align:center; margin-top:20px;'>⚠️ 数据加载失败，请重启软件重试！</h2>";
-                document.getElementById('note-editor-richtext').setAttribute('contenteditable', 'false');
+                const editorEl = document.getElementById('note-editor-richtext');
+                if (editorEl) {
+                    editorEl.innerHTML = "<h2 style='color:red; text-align:center; margin-top:20px;'>⚠️ 数据加载失败，请重启软件重试！</h2>";
+                    editorEl.setAttribute('contenteditable', 'false');
+                }
             }
         }
-        
         async function saveCloudData() {
             if(!cfUser || !isCloudDataLoaded) return; 
             const allData = { notes, categories, categoryColors, trashBin, folderTreeRelations, leftExpandedFolders };
