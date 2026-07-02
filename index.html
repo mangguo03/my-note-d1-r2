@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1757,19 +1759,26 @@
             document.documentElement.style.setProperty('--custom-theme-color', color);
             localStorage.setItem('app-custom-color', color);
             
-            // 1. 改变顶栏背景颜色 (使用 setProperty 强制提升优先级，防止被 Tailwind 覆盖)
+            // 1. 改变顶栏背景颜色
             const header = document.getElementById('app-header');
             if (header) {
                 header.style.setProperty('background-color', color, 'important');
             }
             
-            // 2. 连同右上角的“齿轮设置按钮”一起变色，增强主题一体感
+            // 2. 齿轮设置按钮
             const gearBtn = document.querySelector('button[title="系统设置"]');
             if (gearBtn) {
                 gearBtn.style.setProperty('background-color', color, 'important');
             }
 
-            // ⚠️ 注意：这里删除了隐藏下拉菜单的代码，这样你在拖动调色盘时，菜单不会突然消失
+            // 3. 🌟 新增：应用到左侧栏
+            const leftPanel = document.getElementById('left-panel');
+            if (leftPanel) {
+                // HTML5 的 color picker 返回的是 7 位 Hex 代码 (如 #ff0000)
+                // 在末尾追加 '1A' 相当于赋予它约 10% 的透明度。
+                // 这样既能透出主题色，又能完美保证侧栏字体的对比度。
+                leftPanel.style.setProperty('background-color', color + '1A', 'important');
+            }
         }
 
         function resetColors() {
@@ -1784,6 +1793,12 @@
             const gearBtn = document.querySelector('button[title="系统设置"]');
             if (gearBtn) {
                 gearBtn.style.removeProperty('background-color');
+            }
+
+            // 🌟 清除左侧栏的主题色
+            const leftPanel = document.getElementById('left-panel');
+            if (leftPanel) {
+                leftPanel.style.removeProperty('background-color');
             }
             
             alert("已恢复默认配色！");
