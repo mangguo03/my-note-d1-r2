@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -243,8 +242,8 @@
     <!-- 3. 主题色彩 -->
     <div class="flex items-center justify-between px-3 py-1.5 mt-1 relative">
         <span class="text-blue-600 dark:text-blue-400 text-sm font-bold" data-i18n="label-theme-color">主题色彩</span>
-        <!-- 这里使用 input type="color" 作为颜色选择器，并通过透明度和绝对定位覆盖在图标上 -->
-        <input type="color" id="theme-color-picker" onchange="setCustomThemeColor(this.value)" class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 cursor-pointer">
+        <!-- 👇 核心修改：使用 oninput 实现拖拽时实时预览变色 -->
+        <input type="color" id="theme-color-picker" oninput="setCustomThemeColor(this.value)" class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 cursor-pointer">
         <button class="transition-transform hover:scale-110 pointer-events-none">
             <i class="fa-solid fa-palette text-purple-500 dark:text-purple-400 text-lg"></i>
         </button>
@@ -1753,33 +1752,42 @@
             }
         });
         
-        // ================= 补齐主题色彩相关的 JS 功能 =================
+       // ================= 补齐主题色彩相关的 JS 功能 =================
         function setCustomThemeColor(color) {
-            // 将选择的颜色设为根元素的 CSS 变量
             document.documentElement.style.setProperty('--custom-theme-color', color);
             localStorage.setItem('app-custom-color', color);
             
-            // 简单示例：动态改变顶栏背景颜色（你可以根据需求拓展）
+            // 1. 改变顶栏背景颜色 (使用 setProperty 强制提升优先级，防止被 Tailwind 覆盖)
             const header = document.getElementById('app-header');
             if (header) {
-                header.style.backgroundColor = color;
+                header.style.setProperty('background-color', color, 'important');
             }
             
-            document.getElementById('settings-dropdown').classList.add('hidden');
+            // 2. 连同右上角的“齿轮设置按钮”一起变色，增强主题一体感
+            const gearBtn = document.querySelector('button[title="系统设置"]');
+            if (gearBtn) {
+                gearBtn.style.setProperty('background-color', color, 'important');
+            }
+
+            // ⚠️ 注意：这里删除了隐藏下拉菜单的代码，这样你在拖动调色盘时，菜单不会突然消失
         }
 
         function resetColors() {
-            // 清除自定义颜色，恢复默认 CSS
             document.documentElement.style.removeProperty('--custom-theme-color');
             localStorage.removeItem('app-custom-color');
             
             const header = document.getElementById('app-header');
             if (header) {
-                header.style.backgroundColor = ''; // 恢复原本的 tailwind 颜色
+                header.style.removeProperty('background-color');
             }
+            
+            const gearBtn = document.querySelector('button[title="系统设置"]');
+            if (gearBtn) {
+                gearBtn.style.removeProperty('background-color');
+            }
+            
             alert("已恢复默认配色！");
         }
-
         // 页面加载时自动应用保存的自定义颜色
         window.addEventListener('DOMContentLoaded', () => {
             const savedColor = localStorage.getItem('app-custom-color');
