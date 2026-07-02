@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -750,33 +751,29 @@
                     if (dict.en) dict.en['app-title'] = data.appName;
                 }
 
-                // 👇 🌟 新增：检测并强行注入无法删除的系统默认笔记
-                // 在检查之前，先确保 notes 数组是存在的（防止新账号 notes 为 undefined）
-                if (data.notes) {
-                    notes = data.notes;
-                } else if (!notes) {
-                    notes = [];
+                // 1. 无论如何，先把云端的数据安全地接收过来
+                if (data.categories) {
+                    if (data.categories.length > 0 && typeof data.categories[0] === 'string') { 
+                        categories = data.categories.map(c => ({ id: c, name: c, parentId: null })); 
+                    } else { 
+                        categories = data.categories; 
+                    }
                 }
-
-                const hasDefaultNote = notes.some(n => n.id === 'system_default_instruction');
-                if (!hasDefaultNote) {
-                    notes.push({
-                        id: 'system_default_instruction',
-                        title: '🛠️ 芒果记功能指南与使用说明',
-                        category: '未分类', // 💡 必须把它放进刚刚生成的“未分类”文件夹里
-                        content: `欢迎使用芒果记！<br><br>这是一份内置的系统说明文档，帮助你快速上手。你可以在这里记录灵感、规划工作、保存生活点滴。`,
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString()
-                    });
+                
+                // 2. 终极安全检查：如果 categories 是未定义(undefined) 或者是 空数组(length === 0)
+                if (!categories || categories.length === 0) {
+                    categories = [
+                        { id: "未分类", name: "未分类", parentId: null },
+                        { id: "工作", name: "工作", parentId: null },
+                        { id: "生活", name: "生活", parentId: null }
+                    ];
                     
-                    // 同步将包含默认笔记的数据保存到云端
+                    // 💡 可选：如果你有 saveCloudData() 函数，这里可以调用一下，
+                    // 这样就能把这三个默认文件夹立刻保存到云端，防止刷新后又要重新生成。
                     if (typeof saveCloudData === 'function') {
                         saveCloudData();
                     }
                 }
-                
-                // 接下来的代码应该是处理其他的 UI 渲染逻辑...
-                // if (data.categoryColors) categoryColors = data.categoryColors;
                 
                 // 👇 🌟 新增：检测并强行注入无法删除的系统默认笔记
                 const hasDefaultNote = notes.some(n => n.id === 'system_default_instruction');
