@@ -242,8 +242,8 @@
     <!-- 3. 主题色彩 -->
     <div class="flex items-center justify-between px-3 py-1.5 mt-1 relative">
         <span class="text-blue-600 dark:text-blue-400 text-sm font-bold" data-i18n="label-theme-color">主题色彩</span>
-        <!-- 👇 核心修改：使用 oninput 实现拖拽时实时预览变色 -->
-        <input type="color" id="theme-color-picker" oninput="setCustomThemeColor(this.value)" class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 cursor-pointer">
+        <!-- 加入了阻止事件冒泡，防止点击时意外关闭菜单 -->
+        <input type="color" id="theme-color-picker" onclick="event.stopPropagation()" oninput="setCustomThemeColor(this.value)" class="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 opacity-0 cursor-pointer">
         <button class="transition-transform hover:scale-110 pointer-events-none">
             <i class="fa-solid fa-palette text-purple-500 dark:text-purple-400 text-lg"></i>
         </button>
@@ -1772,40 +1772,32 @@
                 header.style.setProperty('background-color', color, 'important');
             }
             
-            // 2. 🌟 终极魔法：动态接管所有原本写死的蓝色高亮项
-            let themeStyle = document.getElementById('dynamic-theme-style');
-            if (!themeStyle) {
-                themeStyle = document.createElement('style');
-                themeStyle.id = 'dynamic-theme-style';
-                document.head.appendChild(themeStyle);
+            // 2. 仅改变左侧“侧栏面板本身”的底色！(不碰新笔记、新分类等按钮)
+            const leftPanel = document.getElementById('left-panel');
+            if (leftPanel) {
+                leftPanel.style.setProperty('background-color', color, 'important');
             }
-            // 通过注入 CSS，强行把侧栏、按钮的蓝色底色替换成你的主题色
-            themeStyle.innerHTML = `
-                /* 替换侧栏中“选中项”的蓝色背景，以及“新笔记/分类”按钮的蓝色 */
-                .bg-blue-500, .bg-blue-600 { 
-                    background-color: ${color} !important; 
-                    border-color: ${color} !important; 
-                }
-                /* 替换视图切换小按钮(列表/九宫格)用 JS 写的内联蓝色 */
-                [style*="background-color: rgb(59, 130, 246)"],
-                [style*="background-color: #3b82f6"] { 
-                    background-color: ${color} !important; 
-                }
-            `;
             
-            // 选完颜色后自动收起下拉菜单
-            const dropdown = document.getElementById('settings-dropdown');
-            if(dropdown) dropdown.classList.add('hidden');
+            // 🧹 顺手清理掉上一个版本留下的、污染了笔记按钮的错误 CSS 注入
+            const themeStyle = document.getElementById('dynamic-theme-style');
+            if (themeStyle) themeStyle.remove();
+            
+            // 🚨 删除了这里原本会导致菜单关闭的代码！现在可以尽情拖动滑块了！
         }
 
         function resetColors() {
             document.documentElement.style.removeProperty('--custom-theme-color');
             localStorage.removeItem('app-custom-color');
             
+            // 恢复顶栏
             const header = document.getElementById('app-header');
             if (header) header.style.removeProperty('background-color');
             
-            // 🌟 移除我们注入的 CSS，所有元素瞬间恢复原有的经典蓝
+            // 恢复侧栏
+            const leftPanel = document.getElementById('left-panel');
+            if (leftPanel) leftPanel.style.removeProperty('background-color');
+            
+            // 清理掉之前版本注入的错误样式
             const themeStyle = document.getElementById('dynamic-theme-style');
             if (themeStyle) themeStyle.remove();
             
