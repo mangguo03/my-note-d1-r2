@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -736,13 +734,22 @@
                 const data = await res.json();
                 if(res.ok && data.success) {
                     alert("销毁成功：您的账号及所有云端数据已从服务器彻底清除！");
-                    localStorage.removeItem('cfUser'); localStorage.removeItem('cfPass');
+                    localStorage.removeItem('cfUser'); 
+                    localStorage.removeItem('cfPass');
+                    // 🌟 新增：彻底清除主题色彩缓存
+                    localStorage.removeItem('app-custom-color');
                     location.reload(); 
                 } else { alert("注销失败：" + (data.message || "未知错误")); }
             } catch(e) { alert("网络请求失败：" + e.message); }
         }
         
-        function logout() { localStorage.removeItem('cfUser'); localStorage.removeItem('cfPass'); location.reload(); }
+        function logout() { 
+            localStorage.removeItem('cfUser'); 
+            localStorage.removeItem('cfPass'); 
+            // 🌟 新增：彻底清除主题色彩缓存
+            localStorage.removeItem('app-custom-color');
+            location.reload(); 
+        }
         
         function getAuthHeaders() {
             return {
