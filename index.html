@@ -163,8 +163,9 @@
                     
                     <div class="flex items-center gap-1 flex-nowrap flex-shrink-0">
                         
-                        <button id="btn-new-note" onclick="createNewNote()" class="px-2 py-0.5 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-file-lines"></i> <span data-i18n="btn-new-note">新笔记</span></button>
-                        <button onclick="createNewCategory()" class="px-2 py-0.5 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-folder-plus"></i> <span data-i18n="btn-new-folder">新分类</span></button>
+                        <button id="btn-new-note" onclick="createNewNote()" class="px-2 py-0.5 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-plus text-emerald-400 text-sm font-black"></i> <span data-i18n="btn-new-note">新笔记</span></button>
+                        
+                        <button onclick="createNewCategory()" class="px-2 py-0.5 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center gap-1"><i class="fa-solid fa-plus text-emerald-400 text-sm font-black"></i> <span data-i18n="btn-new-folder">新分类</span></button>
                         
                         <div class="relative flex-shrink-0">
                             <button onclick="toggleImportExport(event)" title="导入导出" class="flex items-center justify-center gap-1 px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded shadow-sm transition-colors cursor-pointer">
@@ -209,9 +210,8 @@
                             <i class="fa-solid fa-clock-rotate-left pointer-events-none"></i>
                         </button>
                         
-                        <div class="relative flex-shrink-0">
-                            <button onclick="toggleSettingsMenu(event)" title="系统设置" class="bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-black px-2 py-1 rounded text-[11px] transition-all shadow-sm flex items-center justify-center border border-slate-700 whitespace-nowrap">
-                                <i class="fa-solid fa-gear pointer-events-none bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent"></i>
+                        <button onclick="toggleSettingsMenu(event)" title="系统设置" class="bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-black px-2.5 py-1 rounded transition-all shadow-sm flex items-center justify-center border border-slate-700 whitespace-nowrap">
+                                <i class="fa-solid fa-gear text-lg pointer-events-none bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 bg-clip-text text-transparent"></i>
                             </button>
                            <div id="settings-dropdown" class="hidden fixed mt-1 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col py-1 z-[10000]">
     
@@ -1772,25 +1772,22 @@
                 header.style.setProperty('background-color', color, 'important');
             }
             
-            // 2. 改变左侧栏整体底色
+            // 2. 🌟 精准施法：取消整个侧边栏的上色，防止颜色渗透到标题栏
             const leftPanel = document.getElementById('left-panel');
-            if (leftPanel) {
-                leftPanel.style.setProperty('background-color', color, 'important');
-            }
+            if (leftPanel) leftPanel.style.removeProperty('background-color');
             
-            // 3. 🌟 驱散侧栏的“灰雾”：注入动态 CSS
-            let themeStyle = document.getElementById('dynamic-theme-style');
-            if (!themeStyle) {
-                themeStyle = document.createElement('style');
-                themeStyle.id = 'dynamic-theme-style';
-                document.head.appendChild(themeStyle);
-            }
-            // 强制把侧栏直系子区块的半透明灰色背景干掉（变透明），让纯色完美透出！
-            themeStyle.innerHTML = `
-                #left-panel > div {
-                    background-color: transparent !important;
-                }
-            `;
+            // 3. 🌟 只给存放数据的 3 个具体容器单独上色！完美避开“文件”等栏目
+            const treeContainer = document.getElementById('category-tree-container');
+            const notesContainer = document.getElementById('content-section-container');
+            const allDocsContainer = document.getElementById('all-docs-container');
+            
+            if (treeContainer) treeContainer.style.setProperty('background-color', color, 'important');
+            if (notesContainer) notesContainer.style.setProperty('background-color', color, 'important');
+            if (allDocsContainer) allDocsContainer.style.setProperty('background-color', color, 'important');
+            
+            // 🧹 顺手清理上一个版本可能残留的动态样式
+            const themeStyle = document.getElementById('dynamic-theme-style');
+            if (themeStyle) themeStyle.remove();
         }
 
         function resetColors() {
@@ -1803,7 +1800,15 @@
             const leftPanel = document.getElementById('left-panel');
             if (leftPanel) leftPanel.style.removeProperty('background-color');
             
-            // 🌟 拔除动态 CSS，让原本的灰色毛玻璃恢复原状
+            // 恢复 3 个容器的默认颜色
+            const treeContainer = document.getElementById('category-tree-container');
+            const notesContainer = document.getElementById('content-section-container');
+            const allDocsContainer = document.getElementById('all-docs-container');
+            
+            if (treeContainer) treeContainer.style.removeProperty('background-color');
+            if (notesContainer) notesContainer.style.removeProperty('background-color');
+            if (allDocsContainer) allDocsContainer.style.removeProperty('background-color');
+            
             const themeStyle = document.getElementById('dynamic-theme-style');
             if (themeStyle) themeStyle.remove();
             
