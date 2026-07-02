@@ -1766,13 +1766,36 @@
             document.documentElement.style.setProperty('--custom-theme-color', color);
             localStorage.setItem('app-custom-color', color);
             
-            // 1. 仅改变顶栏背景颜色，保持绝对的清爽感
+            // 1. 改变顶栏背景颜色
             const header = document.getElementById('app-header');
             if (header) {
                 header.style.setProperty('background-color', color, 'important');
             }
             
-            // ⚠️ 侧栏和齿轮图标不再跟随变色，保留它们原本的样式设计
+            // 2. 🌟 终极魔法：动态接管所有原本写死的蓝色高亮项
+            let themeStyle = document.getElementById('dynamic-theme-style');
+            if (!themeStyle) {
+                themeStyle = document.createElement('style');
+                themeStyle.id = 'dynamic-theme-style';
+                document.head.appendChild(themeStyle);
+            }
+            // 通过注入 CSS，强行把侧栏、按钮的蓝色底色替换成你的主题色
+            themeStyle.innerHTML = `
+                /* 替换侧栏中“选中项”的蓝色背景，以及“新笔记/分类”按钮的蓝色 */
+                .bg-blue-500, .bg-blue-600 { 
+                    background-color: ${color} !important; 
+                    border-color: ${color} !important; 
+                }
+                /* 替换视图切换小按钮(列表/九宫格)用 JS 写的内联蓝色 */
+                [style*="background-color: rgb(59, 130, 246)"],
+                [style*="background-color: #3b82f6"] { 
+                    background-color: ${color} !important; 
+                }
+            `;
+            
+            // 选完颜色后自动收起下拉菜单
+            const dropdown = document.getElementById('settings-dropdown');
+            if(dropdown) dropdown.classList.add('hidden');
         }
 
         function resetColors() {
@@ -1780,16 +1803,11 @@
             localStorage.removeItem('app-custom-color');
             
             const header = document.getElementById('app-header');
-            if (header) {
-                header.style.removeProperty('background-color');
-            }
+            if (header) header.style.removeProperty('background-color');
             
-            // 顺手执行一次大扫除，清除掉刚才由于代码测试可能残留在网页标签上的侧栏和齿轮颜色
-            const gearBtn = document.querySelector('button[title="系统设置"]');
-            if (gearBtn) gearBtn.style.removeProperty('background-color');
-            
-            const leftPanel = document.getElementById('left-panel');
-            if (leftPanel) leftPanel.style.removeProperty('background-color');
+            // 🌟 移除我们注入的 CSS，所有元素瞬间恢复原有的经典蓝
+            const themeStyle = document.getElementById('dynamic-theme-style');
+            if (themeStyle) themeStyle.remove();
             
             alert("已恢复默认配色！");
         }
@@ -1829,4 +1847,4 @@
     </script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
-</html> 
+</html>
