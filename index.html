@@ -1772,32 +1772,38 @@
                 header.style.setProperty('background-color', color, 'important');
             }
             
-            // 2. 仅改变左侧“侧栏面板本身”的底色！(不碰新笔记、新分类等按钮)
+            // 2. 改变左侧栏整体底色
             const leftPanel = document.getElementById('left-panel');
             if (leftPanel) {
                 leftPanel.style.setProperty('background-color', color, 'important');
             }
             
-            // 🧹 顺手清理掉上一个版本留下的、污染了笔记按钮的错误 CSS 注入
-            const themeStyle = document.getElementById('dynamic-theme-style');
-            if (themeStyle) themeStyle.remove();
-            
-            // 🚨 删除了这里原本会导致菜单关闭的代码！现在可以尽情拖动滑块了！
+            // 3. 🌟 驱散侧栏的“灰雾”：注入动态 CSS
+            let themeStyle = document.getElementById('dynamic-theme-style');
+            if (!themeStyle) {
+                themeStyle = document.createElement('style');
+                themeStyle.id = 'dynamic-theme-style';
+                document.head.appendChild(themeStyle);
+            }
+            // 强制把侧栏直系子区块的半透明灰色背景干掉（变透明），让纯色完美透出！
+            themeStyle.innerHTML = `
+                #left-panel > div {
+                    background-color: transparent !important;
+                }
+            `;
         }
 
         function resetColors() {
             document.documentElement.style.removeProperty('--custom-theme-color');
             localStorage.removeItem('app-custom-color');
             
-            // 恢复顶栏
             const header = document.getElementById('app-header');
             if (header) header.style.removeProperty('background-color');
             
-            // 恢复侧栏
             const leftPanel = document.getElementById('left-panel');
             if (leftPanel) leftPanel.style.removeProperty('background-color');
             
-            // 清理掉之前版本注入的错误样式
+            // 🌟 拔除动态 CSS，让原本的灰色毛玻璃恢复原状
             const themeStyle = document.getElementById('dynamic-theme-style');
             if (themeStyle) themeStyle.remove();
             
