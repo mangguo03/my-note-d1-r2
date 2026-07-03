@@ -810,6 +810,9 @@
                 if (!response.ok) throw new Error('网络响应异常');
                 const data = await response.json();
                 
+                // 👇 🌟 核心修复 1：必须加上这句！解开安全锁，允许向后台保存数据！
+                isCloudDataLoaded = true; 
+                
                 if (data.appName) {
                     document.title = data.appName; 
                     const titleEl = document.querySelector('[data-i18n="app-title"]');
@@ -819,16 +822,14 @@
                 }
 
                 // 1. 处理文件夹 (Categories) 数据
-                if (data.categories) {
-                    if (data.categories.length > 0 && typeof data.categories[0] === 'string') { 
+                if (data.categories && data.categories.length > 0) {
+                    if (typeof data.categories[0] === 'string') { 
                         categories = data.categories.map(c => ({ id: c, name: c, parentId: null })); 
                     } else { 
                         categories = data.categories; 
                     }
-                }
-                
-                // 2. 文件夹保底机制
-                if (!categories || categories.length === 0) {
+                } else {
+                    // 2. 文件夹保底机制
                     categories = [
                         { id: "未分类", name: "未分类", parentId: null },
                         { id: "工作", name: "工作", parentId: null },
@@ -836,10 +837,10 @@
                     ];
                 }
                 
-                // 3. 🚨 核心修复：必须先把云端的日记数据接住，防止新账号崩溃
-                if (data.notes) {
+                // 3. 👇 🌟 核心修复 2：严格判定云端返回的笔记数据
+                if (data.notes && Array.isArray(data.notes)) {
                     notes = data.notes;
-                } else if (!notes) {
+                } else {
                     notes = [];
                 }
                 
@@ -878,12 +879,13 @@
                         createdAt: Date.now() // 补充创建时间，避免排序报错
                     });
                     
+                    // 因为上面已经解开了 isCloudDataLoaded 的锁，这句保存终于能真正发往云端了！
                     if (typeof saveCloudData === 'function') {
                         saveCloudData();
                     }
                 }
                 
-                // 4. 🚨 恢复被遗漏的其他重要数据配置
+                // 4. 恢复被遗漏的其他重要数据配置
                 if (data.categoryColors) categoryColors = data.categoryColors;
                 if (data.trashBin) trashBin = data.trashBin;
                 if (data.folderTreeRelations) folderTreeRelations = data.folderTreeRelations;
