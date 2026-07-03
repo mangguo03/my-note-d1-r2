@@ -116,14 +116,14 @@
         <aside id="left-panel" class="bg-slate-50 dark:bg-slate-800 dark:border-slate-700 flex flex-col flex-shrink-0 overflow-hidden border-r border-slate-200 panel-large-text transition-all relative z-50 h-full" style="width: 180px; min-width: 120px; max-width: 480px;">
             <div id="all-docs-container" class="py-0.5 px-1.5 border-b border-slate-200 dark:border-slate-700 bg-slate-100/40 dark:bg-slate-800 flex-shrink-0"></div>
             
-            <div class="px-2.5 py-1.5 bg-slate-200/60 dark:bg-slate-900/60 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-300/60 dark:hover:bg-slate-800 transition-colors" onclick="toggleFolderSection()">
+            <div class="px-1 py-0.5 bg-slate-200/60 dark:bg-slate-900/60 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-300/60 dark:hover:bg-slate-800 transition-colors" onclick="toggleFolderSection()">
                 <span class="sync-btn-font text-blue-600 dark:text-blue-400 font-black flex items-center gap-1.5">
                     <i id="folder-section-icon" class="fa-solid fa-chevron-down text-[11px] transition-transform duration-200"></i>
                     <span data-i18n="label-folder">文件</span>
                 </span>
                 <div class="flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-0.5 shadow-inner scale-95 origin-right" onclick="event.stopPropagation()">
-                    <button id="view-tree-list" onclick="toggleTreeLayout('list')" class="px-2 py-1 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" title="列表视图"><i class="fa-solid fa-list-ul"></i></button>
-                    <button id="view-tree-grid" onclick="toggleTreeLayout('grid')" class="px-2 py-1 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" title="九宫格视图"><i class="fa-solid fa-table-cells-large"></i></button>
+                    <button id="view-tree-list" onclick="toggleTreeLayout('list')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" title="列表视图"><i class="fa-solid fa-list-ul"></i></button>
+                    <button id="view-tree-grid" onclick="toggleTreeLayout('grid')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" title="九宫格视图"><i class="fa-solid fa-table-cells-large"></i></button>
                 </div>
             </div>
             
