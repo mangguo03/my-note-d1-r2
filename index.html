@@ -120,7 +120,8 @@
             <div class="px-2 py-1 bg-slate-200 dark:bg-slate-900 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors relative z-10" onclick="toggleFolderSection()">
                 
                 <!-- 🚀 锁定为 w-[68px] h-[24px] 且居中对齐 -->
-                <span class="sync-btn-font text-yellow-600 dark:text-yellow-400 font-black flex items-center justify-center gap-1.5 border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/30 w-[68px] h-[24px] rounded shadow-sm">
+                <!-- 🌟 把 yellow 全部换成了 blue -->
+                <span class="sync-btn-font text-blue-600 dark:text-blue-400 font-black flex items-center justify-center gap-1 border border-blue-500 bg-blue-50 dark:bg-blue-900/30 w-[68px] h-[24px] rounded shadow-sm">
                     <i id="folder-section-icon" class="fa-solid fa-chevron-down text-[11px] transition-transform duration-200"></i>
                     <span data-i18n="label-folder">文件</span>
                 </span>
@@ -137,10 +138,10 @@
             <div class="px-2 py-1 bg-slate-200 dark:bg-slate-900 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 transition-colors relative z-10">
                 <div class="flex items-center gap-0.5">
                     
-                    <!-- 🚀 同样锁定为 w-[68px] h-[24px] 且居中对齐 -->
-                    <div class="flex items-center justify-center bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-500 w-[68px] h-[24px] rounded shadow-sm cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-800 transition-colors" title="当前笔记归属文件夹（点击切换）">
-                        <!-- 这里的宽度改为 w-full，让下拉框填满我们设定的 68px 外壳 -->
-                        <select id="note-category-select" dir="rtl" onchange="changeNoteCategory(this.value)" class="text-[11px] font-black text-yellow-600 dark:text-yellow-400 bg-transparent outline-none cursor-pointer w-full truncate px-1"></select>
+                    <!-- 🌟 边框、背景、悬停效果全部换成了 blue -->
+                    <div class="flex items-center justify-center bg-blue-50 dark:bg-blue-900/30 border border-blue-500 w-[68px] h-[24px] rounded shadow-sm cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors" title="当前笔记归属文件夹（点击切换）">
+                        <!-- 🌟 字体颜色也换成了 blue -->
+                        <select id="note-category-select" dir="rtl" onchange="changeNoteCategory(this.value)" class="text-[11px] font-black text-blue-600 dark:text-blue-400 bg-transparent outline-none cursor-pointer w-full truncate px-1"></select>
                     </div>
                     
                 </div>
