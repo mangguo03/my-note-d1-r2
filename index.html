@@ -1197,7 +1197,17 @@
         function createNewNote() {
             const defaultCat = currentFilterCategory !== "全部" ? currentFilterCategory : "未分类";
             const newDoc = { id: 'md_' + Date.now(), title: '', content: '', category: defaultCat, updatedAt: Date.now() };
-            notes.unshift(newDoc); saveCloudData(); openNote(newDoc.id);
+            notes.unshift(newDoc); 
+            saveCloudData(); 
+            openNote(newDoc.id);
+            
+            // 👇 🌟 新增：利用很小的延迟确保界面渲染完成后，强行把光标聚焦到正文输入框
+            setTimeout(() => {
+                const editor = document.getElementById('note-editor-richtext');
+                if (editor) {
+                    editor.focus();
+                }
+            }, 10);
         }
         
         function openNote(id) {
