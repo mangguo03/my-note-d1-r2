@@ -175,16 +175,12 @@
                         
                         <!-- 3. 导入导出 -->
                         <div class="relative flex-shrink-0">
-                            <button onclick="toggleImportExport(event)" title="导入导出" class="w-[48px] h-[26px] flex items-center justify-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded shadow-sm transition-colors cursor-pointer">
+                            <button onclick="toggleImportExport(event)" title="导入导出" class="w-[48px] h-[20px] flex items-center justify-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded shadow-sm transition-colors cursor-pointer">
                                 <i class="fa-solid fa-right-left text-[11px] ml-0.5 pointer-events-none"></i>
                                 <i id="import-export-arrow" class="fa-solid fa-chevron-down text-[9px] transition-transform duration-200 pointer-events-none"></i>
                             </button>
                         
-                        <div class="relative flex-shrink-0">
-                            <button onclick="toggleImportExport(event)" title="导入导出" class="flex items-center justify-center gap-1 px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded shadow-sm transition-colors cursor-pointer">
-                                <i class="fa-solid fa-right-left text-[11px] ml-0.5 pointer-events-none"></i>
-                                <i id="import-export-arrow" class="fa-solid fa-chevron-down text-[9px] transition-transform duration-200 pointer-events-none"></i>
-                            </button>
+                        
                             <div id="import-export-content" class="hidden fixed mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-2xl border border-slate-200 dark:border-slate-700 flex flex-col p-1.5 gap-1.5 z-[9999]">
                                 <div class="flex items-center gap-1.5">
                                     <button onclick="triggerImport('md')" class="flex-1 py-1 px-1 bg-amber-500 hover:bg-amber-600 text-white rounded font-black transition-all text-center truncate text-[10px] shadow-sm"><i class="fa-solid fa-file-import"></i> MD</button>
