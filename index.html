@@ -1516,13 +1516,34 @@
                          };
                          reader.readAsDataURL(imageFile);
                      } else {
-                         // 🚨 如果是粘贴普通文字，为了防止带入乱七八糟的网页格式，强制转换为纯文本粘贴
+                         // 🚨 如果是粘贴普通文字
                          const text = (e.originalEvent || e).clipboardData.getData('text/plain');
                          if (text) {
                              e.preventDefault();
-                             document.execCommand('insertText', false, text);
+                             
+                             // 🚀 核心优化：对于超长文本，彻底抛弃巨慢的 execCommand，直接用原生节点插入！
+                             const selection = window.getSelection();
+                             if (selection.rangeCount) {
+                                 const range = selection.getRangeAt(0);
+                                 range.deleteContents();
+                                 
+                                 // 高效分割多行文本并插入，防止丢失换行符
+                                 const textLines = text.split('\n');
+                                 const fragment = document.createDocumentFragment();
+                                 textLines.forEach((line, index) => {
+                                     fragment.appendChild(document.createTextNode(line));
+                                     if (index < textLines.length - 1) {
+                                         fragment.appendChild(document.createElement('br'));
+                                     }
+                                 });
+                                 
+                                 range.insertNode(fragment);
+                                 range.collapse(false); // 把光标移到粘贴内容的最后
+                                 selection.removeAllRanges();
+                                 selection.addRange(range);
+                             }
                          }
-                         setTimeout(() => { handleEditorInput(); }, 100);
+                         handleEditorInput(); // 直接交给防抖函数处理
                      }
                 });
 
@@ -1614,30 +1635,26 @@
                 const url = window.URL.createObjectURL(content); const a = document.createElement("a"); a.href = url; a.download = `${rootFolderName}_备份.zip`; a.click(); window.URL.revokeObjectURL(url);
             } catch (error) { alert("导出失败"); } finally { document.querySelector('button[onclick="exportCurrentFolder()"]').innerHTML = originalBtnText; }
         }
-                function handleImportFile(event, type) {
-                       const file = event.target.files[0]; if (!file) return;
+                function handleEditorInput() { 
+            if (!activeNoteId) return; 
             
-                       // 导入时给用户一个视觉反馈
-                      document.getElementById('note-title-input').value = "🚀 正在拼命加载中...";
+            // 1. 清除之前的定时器，防止连续打字时堆积任务
+            if (saveTimeout) clearTimeout(saveTimeout);
             
-                      const reader = new FileReader();
-                      reader.onload = function(e) {
-                             let parsed = e.target.result; if(type === 'md' && typeof marked !== 'undefined') parsed = marked.parse(parsed);
-                             const defaultCat = currentFilterCategory !== "全部" ? currentFilterCategory : "未分类";
-                             const doc = { id: 'md_' + Date.now(), title: file.name.replace(/\.[^/.]+$/, ""), content: parsed, category: defaultCat, updatedAt: Date.now() };
-                             notes.push(doc); 
-                
-                             // 先打开笔记渲染界面，让用户看到结果
-                             openNote(doc.id); 
-                             event.target.value = '';
-                
-                             // 延迟 500 毫秒再去执行沉重的云端保存动作，防止界面冻结
-                            setTimeout(() => {
-                                   saveCloudData(); 
-                            }, 500);
-                       };
-                       reader.readAsText(file);
-                 }
+            // 2. 🚀 把【读取几十万字】的耗时操作，也放进防抖里！
+            // 绝不能每敲一个字就去提取一次 innerHTML，让浏览器喘口气
+            saveTimeout = setTimeout(() => {
+                const idx = notes.findIndex(n => n.id === activeNoteId);
+                if (idx !== -1) {
+                    notes[idx].title = document.getElementById('note-title-input').value;
+                    notes[idx].content = document.getElementById('note-editor-richtext').innerHTML;
+                    notes[idx].updatedAt = Date.now(); 
+                    
+                    renderLeftNotesView(); 
+                    saveCloudData(); 
+                }
+            }, 800); 
+        }
 
         function handleFolderImport(event) {
             const files = event.target.files; if (!files || files.length === 0) return;
