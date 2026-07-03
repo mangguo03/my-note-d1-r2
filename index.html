@@ -240,20 +240,18 @@
                                     <span class="font-bold text-sm" data-i18n="lang-toggle">切换语言 / EN</span>
                                 </button>
 
-                                <!-- 2. 主题模式 -->
-                                <div class="flex items-center justify-between px-3 py-2 mt-1">
-                                    <span class="text-blue-600 dark:text-blue-400 text-sm font-bold" data-i18n="theme-title">主题模式</span>
-                                    <div class="flex gap-2">
-                                        <button onclick="setTheme('light'); document.getElementById('settings-dropdown').classList.add('hidden');" class="p-1.5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-transparent">
-                                            <i class="fa-solid fa-sun text-yellow-500"></i>
-                                        </button>
-                                        <button onclick="setTheme('dark'); document.getElementById('settings-dropdown').classList.add('hidden');" class="p-1.5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-transparent">
-                                            <i class="fa-solid fa-moon text-blue-500 dark:text-blue-400"></i>
-                                        </button>
-                                        <button onclick="setTheme('system'); document.getElementById('settings-dropdown').classList.add('hidden');" class="p-1.5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-transparent">
-                                            <i class="fa-solid fa-desktop text-slate-400"></i>
-                                        </button>
-                                    </div>
+                                <!-- 主题模式 -->
+                                <div class="flex items-center gap-2 mt-1">
+                                    <!-- 1. 浅色模式 (太阳) -->
+                                    <button onclick="setTheme('light')" class="flex-1 flex items-center justify-center h-[28px] bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-600 rounded shadow-sm transition-colors" title="浅色模式">
+                                        <i class="fa-solid fa-sun text-yellow-500"></i>
+                                    </button>
+                                    
+                                    <!-- 2. 深色模式 (月亮) -->
+                                    <button onclick="setTheme('dark')" class="flex-1 flex items-center justify-center h-[28px] bg-slate-100 dark:bg-slate-700/50 hover:bg-slate-200 dark:hover:bg-slate-600 rounded shadow-sm transition-colors" title="深色模式">
+                                        <i class="fa-solid fa-moon text-blue-400"></i>
+                                    </button>
+                                </div>
                                 </div>
 
                                 <div class="h-px bg-slate-200 dark:bg-slate-700/80 my-1 mx-2"></div>
@@ -298,19 +296,13 @@
                                     <div class="text-[10px] text-slate-400 mt-1 text-center font-normal" data-i18n="shortcut-hint">快捷方式：单键双击或组合键</div>
                                 </div>
 
-                                <!-- 6. 注册 / 登录 -->
-                                <button onclick="handleAuth(); document.getElementById('settings-dropdown').classList.add('hidden');" class="w-full flex items-center gap-2 px-3 py-2 mt-1 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-slate-700 dark:text-slate-200">
-                                    <i class="fa-solid fa-user-plus text-emerald-600 dark:text-emerald-500"></i>
-                                    <span class="font-bold text-sm" data-i18n="btn-login-register">注册 / 登录</span>
-                                </button>
-                                
-                                <!-- 7. 退出登录 -->
+                                <!-- 6. 退出登录 -->
                                 <button onclick="logout()" class="w-full flex items-center gap-2 px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-slate-700 dark:text-slate-200">
                                     <i class="fa-solid fa-right-from-bracket text-slate-400"></i>
                                     <span class="font-bold text-sm" data-i18n="nav-logout">退出登录</span>
                                 </button>
                                 
-                                <!-- 8. 注销账号 -->
+                                <!-- 7. 注销账号 -->
                                 <button onclick="deleteAccount()" class="w-full flex items-center gap-2 px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors text-red-500">
                                     <i class="fa-solid fa-user-xmark"></i>
                                     <span class="font-bold text-sm" data-i18n="nav-delete">注销账号</span>
@@ -318,7 +310,7 @@
 
                                 <div class="h-px bg-slate-200 dark:bg-slate-700/80 my-1 mx-2"></div>
 
-                                <!-- 9. 关于软件 -->
+                                <!-- 8. 关于软件 -->
                                 <button onclick="showAboutModal(); document.getElementById('settings-dropdown').classList.add('hidden');" class="w-full flex items-center gap-2 px-3 py-2 mb-1 hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors text-slate-700 dark:text-slate-200">
                                     <i class="fa-solid fa-circle-info text-blue-500 dark:text-blue-400"></i>
                                     <span class="font-bold text-sm" data-i18n="about-soft">关于软件</span>
@@ -1872,4 +1864,4 @@
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
-</html> 
+</html>
