@@ -163,13 +163,22 @@
                     
                     <div class="flex items-center gap-1 flex-nowrap flex-shrink-0">
                         
-                        <button id="btn-new-note" onclick="createNewNote()" class="px-2 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center justify-center gap-1 transition-colors">
+                        <!-- 1. 新笔记 -->
+                        <button id="btn-new-note" onclick="createNewNote()" class="w-[72px] h-[20px] text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center justify-center gap-1 transition-colors">
                             <i class="fa-solid fa-plus text-emerald-400 text-sm font-black"></i> <span data-i18n="btn-new-note">新笔记</span>
                         </button>
                         
-                        <button onclick="createNewCategory()" class="px-2 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center justify-center gap-1 transition-colors">
+                        <!-- 2. 新分类 -->
+                        <button onclick="createNewCategory()" class="w-[72px] h-[20px] text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center justify-center gap-1 transition-colors">
                             <i class="fa-solid fa-plus text-emerald-400 text-sm font-black"></i> <span data-i18n="btn-new-folder">新分类</span>
                         </button>
+                        
+                        <!-- 3. 导入导出 -->
+                        <div class="relative flex-shrink-0">
+                            <button onclick="toggleImportExport(event)" title="导入导出" class="w-[48px] h-[26px] flex items-center justify-center gap-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded shadow-sm transition-colors cursor-pointer">
+                                <i class="fa-solid fa-right-left text-[11px] ml-0.5 pointer-events-none"></i>
+                                <i id="import-export-arrow" class="fa-solid fa-chevron-down text-[9px] transition-transform duration-200 pointer-events-none"></i>
+                            </button>
                         
                         <div class="relative flex-shrink-0">
                             <button onclick="toggleImportExport(event)" title="导入导出" class="flex items-center justify-center gap-1 px-3 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded shadow-sm transition-colors cursor-pointer">
