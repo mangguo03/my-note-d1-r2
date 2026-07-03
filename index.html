@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -244,10 +245,10 @@
                                 <div class="flex items-center justify-between px-3 py-2 mt-1">
                                     <span class="text-blue-600 dark:text-blue-400 text-sm font-bold" data-i18n="theme-title">主题模式</span>
                                     <div class="flex gap-2">
-                                        <button onclick="setTheme('light'); document.getElementById('settings-dropdown').classList.add('hidden');" class="p-1.5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-transparent">
+                                        <button onclick="setTheme('light'); document.getElementById('settings-dropdown').classList.add('hidden');" class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-transparent">
                                             <i class="fa-solid fa-sun text-yellow-500"></i>
                                         </button>
-                                        <button onclick="setTheme('dark'); document.getElementById('settings-dropdown').classList.add('hidden');" class="p-1.5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-transparent">
+                                        <button onclick="setTheme('dark'); document.getElementById('settings-dropdown').classList.add('hidden');" class="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors border border-slate-200 dark:border-transparent">
                                             <i class="fa-solid fa-moon text-blue-500 dark:text-blue-400"></i>
                                         </button>
                                     </div>
@@ -1234,17 +1235,25 @@
         function handleEditorInput() { 
             if (!activeNoteId) return; 
             const idx = notes.findIndex(n => n.id === activeNoteId);
+            
             if (idx !== -1) {
+                // 1. 每次打字，仅仅在内存里更新当前内容，绝对不立刻触发界面重绘！
                 notes[idx].title = document.getElementById('note-title-input').value;
                 notes[idx].content = document.getElementById('note-editor-richtext').innerHTML;
             }
-            renderLeftNotesView(); 
+            
+            // 2. 清除之前的定时器（如果你一直在连续打字，就不会执行下面的保存和重绘）
             if (saveTimeout) clearTimeout(saveTimeout);
+            
+            // 3. 防抖核心：等你停下键盘 800 毫秒后，再统一执行耗时操作
             saveTimeout = setTimeout(() => {
                 const idx2 = notes.findIndex(n => n.id === activeNoteId);
                 if (idx2 !== -1) notes[idx2].updatedAt = Date.now(); 
-                saveCloudData(); renderLeftNotesView(); 
-            }, 1500); 
+                
+                // 🚨 把原本在外面“裸奔”的重绘列表函数，移到了定时器里面！
+                renderLeftNotesView(); 
+                saveCloudData(); 
+            }, 800); 
         }
         
         function bindCategoryContextMenu(element, catId) {
