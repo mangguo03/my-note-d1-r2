@@ -116,28 +116,39 @@
         <aside id="left-panel" class="bg-slate-50 dark:bg-slate-800 dark:border-slate-700 flex flex-col flex-shrink-0 overflow-hidden border-r border-slate-200 panel-large-text transition-all relative z-50 h-full" style="width: 180px; min-width: 120px; max-width: 480px;">
             <div id="all-docs-container" class="py-0.5 px-1.5 border-b border-slate-200 dark:border-slate-700 bg-slate-100/40 dark:bg-slate-800 flex-shrink-0"></div>
             
-            <div class="px-1 py-0.5 bg-slate-200/60 dark:bg-slate-900/60 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-300/60 dark:hover:bg-slate-800 transition-colors" onclick="toggleFolderSection()">
-                <span class="sync-btn-font text-blue-600 dark:text-blue-400 font-black flex items-center gap-1.5">
+            <div class="px-1 py-0.5 bg-slate-200 dark:bg-slate-900 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors relative z-10" onclick="toggleFolderSection()">
+                
+                <!-- 🌟 核心修改：加了边框(border)、内边距(px/py)、变黄(text-yellow) -->
+                <span class="sync-btn-font text-yellow-600 dark:text-yellow-400 font-black flex items-center gap-1.5 border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/30 px-2 py-0.5 rounded shadow-sm">
                     <i id="folder-section-icon" class="fa-solid fa-chevron-down text-[11px] transition-transform duration-200"></i>
                     <span data-i18n="label-folder">文件</span>
                 </span>
+                
                 <div class="flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-0.5 shadow-inner scale-95 origin-right" onclick="event.stopPropagation()">
-                    <button id="view-tree-list" onclick="toggleTreeLayout('list')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" title="列表视图"><i class="fa-solid fa-list-ul"></i></button>
-                    <button id="view-tree-grid" onclick="toggleTreeLayout('grid')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" title="九宫格视图"><i class="fa-solid fa-table-cells-large"></i></button>
+                    <button id="view-tree-list" onclick="toggleTreeLayout('list')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" style="background-color: #3b82f6; color: #ffffff;" title="列表视图"><i class="fa-solid fa-list-ul"></i></button>
+                    <button id="view-tree-grid" onclick="toggleTreeLayout('grid')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" style="background-color: transparent;" title="九宫格视图"><i class="fa-solid fa-table-cells-large"></i></button>
                 </div>
             </div>
             
             <div id="category-tree-container" class="p-1.5 border-b border-slate-200 dark:border-slate-700 bg-slate-100/40 dark:bg-slate-800/40 flex-shrink-0 max-h-[30vh] overflow-y-auto space-y-1"></div>
             
-            <div class="px-2 py-1 bg-slate-200/60 dark:bg-slate-900/60 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 transition-colors">
+            <!-- 当前笔记分类筛选栏 -->
+            <div class="px-2 py-1 bg-slate-200 dark:bg-slate-900 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 transition-colors relative z-10">
                 <div class="flex items-center gap-0.5">
+                    
+                    <!-- 1. 左侧折叠箭头变成黄色 -->
                     <div onclick="toggleContentSection()" class="cursor-pointer px-1 py-1 hover:bg-slate-300 dark:hover:bg-slate-700 rounded transition-colors flex items-center justify-center">
-                        <i id="content-section-icon" class="fa-solid fa-chevron-down text-[11px] text-emerald-600 dark:text-emerald-400 transition-transform duration-200"></i>
+                        <i id="content-section-icon" class="fa-solid fa-chevron-down text-[11px] text-yellow-600 dark:text-yellow-400 transition-transform duration-200"></i>
                     </div>
-                    <div class="flex items-center bg-emerald-100/80 dark:bg-emerald-900/50 border border-emerald-300 dark:border-emerald-700 px-1 py-0.5 rounded shadow-sm cursor-pointer hover:bg-emerald-200 dark:hover:bg-emerald-800 transition-colors" title="当前笔记归属文件夹（点击切换）">
-                        <select id="note-category-select" onchange="changeNoteCategory(this.value)" class="text-[11px] font-black text-emerald-700 dark:text-emerald-300 bg-transparent outline-none cursor-pointer w-[48px] truncate"></select>
+                    
+                    <!-- 2. 分类下拉框的边框、背景、文字全部变成统一的黄色系 -->
+                    <div class="flex items-center bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-500 px-1 py-0.5 rounded shadow-sm cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-800 transition-colors" title="当前笔记归属文件夹（点击切换）">
+                        <select id="note-category-select" onchange="changeNoteCategory(this.value)" class="text-[11px] font-black text-yellow-600 dark:text-yellow-400 bg-transparent outline-none cursor-pointer w-[48px] truncate"></select>
                     </div>
+                    
                 </div>
+                
+                <!-- 右侧的视图切换按钮保持原样 -->
                 <div class="flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-0.5 shadow-inner scale-95 origin-right">
                     <button id="view-left-list" onclick="toggleLeftView('list')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" style="background-color: #3b82f6; color: #ffffff;" title="列表视图"><i class="fa-solid fa-list-ul"></i></button>
                     <button id="view-left-grid" onclick="toggleLeftView('grid')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" style="background-color: transparent;" title="九宫格视图"><i class="fa-solid fa-table-cells-large"></i></button>
