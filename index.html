@@ -1433,15 +1433,34 @@
                editor.addEventListener('dragover', (e) => { if (window.draggingImageNode) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } });
 
                editor.addEventListener('drop', (e) => {
-                   if (window.draggingImageNode) {
-                       e.preventDefault(); let range = null;
-                       if (document.caretRangeFromPoint) { range = document.caretRangeFromPoint(e.clientX, e.clientY); } 
-                       else if (document.caretPositionFromPoint) { const pos = document.caretPositionFromPoint(e.clientX, e.clientY); range = document.createRange(); range.setStart(pos.offsetNode, pos.offset); }
-                       if (range) { window.draggingImageNode.remove(); range.insertNode(window.draggingImageNode); const space = document.createTextNode('\u00A0'); range.collapse(false); range.insertNode(space); }
-                       window.draggingImageNode = null; handleEditorInput();
-                   }
+                     // ... 原有的 drop 逻辑 ...
+                     if (range) { window.draggingImageNode.remove(); range.insertNode(window.draggingImageNode); const space = document.createTextNode('\u00A0'); range.collapse(false); range.insertNode(space); }
+                     window.draggingImageNode = null; handleEditorInput();
                });
 
+              // 你添加的新代码位置非常对：
+              editor.addEventListener('copy', (e) => {
+                    const selection = window.getSelection();
+                    if (!selection.rangeCount) return;
+                    e.preventDefault();
+                    e.clipboardData.setData('text/plain', selection.toString());
+              });
+
+              editor.addEventListener('cut', (e) => {
+                    const selection = window.getSelection();
+                    if (!selection.rangeCount) return;
+                    e.preventDefault();
+                    const text = selection.toString();
+                    navigator.clipboard.writeText(text).then(() => {
+                           const range = selection.getRangeAt(0);
+                           range.deleteContents();
+                           handleEditorInput(); 
+                   }).catch(err => {
+                        console.error("剪切失败:", err);
+                   });
+              });
+
+             // 接着是原来的 getClientY 定义
                const getClientY = (e) => { return e.touches ? e.touches[0].clientY : e.clientY; };
                const getClientX = (e) => { return e.touches ? e.touches[0].clientX : e.clientX; };
 
@@ -1516,35 +1535,35 @@
                          };
                          reader.readAsDataURL(imageFile);
                      } else {
-                         // 🚨 如果是粘贴普通文字
-                         const text = (e.originalEvent || e).clipboardData.getData('text/plain');
-                         if (text) {
-                             e.preventDefault();
-                             
-                             // 🚀 核心优化：对于超长文本，彻底抛弃巨慢的 execCommand，直接用原生节点插入！
-                             const selection = window.getSelection();
-                             if (selection.rangeCount) {
-                                 const range = selection.getRangeAt(0);
-                                 range.deleteContents();
-                                 
-                                 // 高效分割多行文本并插入，防止丢失换行符
-                                 const textLines = text.split('\n');
-                                 const fragment = document.createDocumentFragment();
-                                 textLines.forEach((line, index) => {
-                                     fragment.appendChild(document.createTextNode(line));
-                                     if (index < textLines.length - 1) {
-                                         fragment.appendChild(document.createElement('br'));
-                                     }
-                                 });
-                                 
-                                 range.insertNode(fragment);
-                                 range.collapse(false); // 把光标移到粘贴内容的最后
-                                 selection.removeAllRanges();
-                                 selection.addRange(range);
-                             }
-                         }
-                         handleEditorInput(); // 直接交给防抖函数处理
-                     }
+                           // 🚨 如果是粘贴普通文字
+                           const text = (e.originalEvent || e).clipboardData.getData('text/plain');
+                           if (text) {
+                               e.preventDefault();
+                               
+                               // 🚀 核心优化：直接使用原生节点插入，绕过 execCommand 的性能坑
+                               const selection = window.getSelection();
+                               if (selection.rangeCount) {
+                                   const range = selection.getRangeAt(0);
+                                   range.deleteContents();
+                                   
+                                   // 高效分割多行文本并插入
+                                   const textLines = text.split('\n');
+                                   const fragment = document.createDocumentFragment();
+                                   textLines.forEach((line, index) => {
+                                       fragment.appendChild(document.createTextNode(line));
+                                       if (index < textLines.length - 1) {
+                                           fragment.appendChild(document.createElement('br'));
+                                       }
+                                   });
+                                   
+                                   range.insertNode(fragment);
+                                   range.collapse(false);
+                                   selection.removeAllRanges();
+                                   selection.addRange(range);
+                               }
+                           }
+                           handleEditorInput(); // 这里会自动触发我们之前改过的防抖保存逻辑
+                       }
                 });
 
                 // ======================================================================
