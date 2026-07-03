@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -1077,8 +1076,11 @@
                 const isSelected = note.id === activeNoteId;
                 box.onclick = (e) => { if (!e.target.closest('.del-btn')) openNote(note.id); };
         
-                const plainText = note.content ? note.content.replace(/<[^>]+>/g, '').substring(0, 15) : '...';
-                const displayTitle = note.title || t('untitled'); 
+                // 🚀 核心性能优化：只取前 800 个字符做正则剔除，避免对十万长文执行深层计算卡死浏览器
+                const shortContent = note.content ? note.content.substring(0, 800) : '';
+                const plainText = shortContent ? shortContent.replace(/<[^>]+>/g, '').substring(0, 15) : '...';
+                
+                const displayTitle = note.title || t('untitled');
                 const defaultBoxStyle = 'bg-white dark:bg-slate-800 border-emerald-400 dark:border-emerald-600 hover:bg-emerald-50 dark:hover:bg-slate-700 shadow-sm';
                 const activeBoxStyle = 'bg-blue-500 border-blue-600 text-white shadow active-note-item';
 
@@ -1612,18 +1614,30 @@
                 const url = window.URL.createObjectURL(content); const a = document.createElement("a"); a.href = url; a.download = `${rootFolderName}_备份.zip`; a.click(); window.URL.revokeObjectURL(url);
             } catch (error) { alert("导出失败"); } finally { document.querySelector('button[onclick="exportCurrentFolder()"]').innerHTML = originalBtnText; }
         }
-
-        function handleImportFile(event, type) {
-            const file = event.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                let parsed = e.target.result; if(type === 'md' && typeof marked !== 'undefined') parsed = marked.parse(parsed);
-                const defaultCat = currentFilterCategory !== "全部" ? currentFilterCategory : "未分类";
-                const doc = { id: 'md_' + Date.now(), title: file.name.replace(/\.[^/.]+$/, ""), content: parsed, category: defaultCat, updatedAt: Date.now() };
-                notes.push(doc); saveCloudData(); openNote(doc.id); event.target.value = '';
-            };
-            reader.readAsText(file);
-        }
+                function handleImportFile(event, type) {
+                       const file = event.target.files[0]; if (!file) return;
+            
+                       // 导入时给用户一个视觉反馈
+                      document.getElementById('note-title-input').value = "🚀 正在拼命加载中...";
+            
+                      const reader = new FileReader();
+                      reader.onload = function(e) {
+                             let parsed = e.target.result; if(type === 'md' && typeof marked !== 'undefined') parsed = marked.parse(parsed);
+                             const defaultCat = currentFilterCategory !== "全部" ? currentFilterCategory : "未分类";
+                             const doc = { id: 'md_' + Date.now(), title: file.name.replace(/\.[^/.]+$/, ""), content: parsed, category: defaultCat, updatedAt: Date.now() };
+                             notes.push(doc); 
+                
+                             // 先打开笔记渲染界面，让用户看到结果
+                             openNote(doc.id); 
+                             event.target.value = '';
+                
+                             // 延迟 500 毫秒再去执行沉重的云端保存动作，防止界面冻结
+                            setTimeout(() => {
+                                   saveCloudData(); 
+                            }, 500);
+                       };
+                       reader.readAsText(file);
+                 }
 
         function handleFolderImport(event) {
             const files = event.target.files; if (!files || files.length === 0) return;
