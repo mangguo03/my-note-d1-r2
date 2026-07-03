@@ -21,6 +21,8 @@
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
     
     <style>
+        /* 💡 自动换行控制逻辑 */
+        .no-wrap { white-space: nowrap !important; overflow-x: auto !important; }
         /* 💡 解决双标题栏：当作为独立桌面 PWA 运行时，自动隐藏网页内置的顶栏 */
         @media (display-mode: standalone), (display-mode: window-controls-overlay) {
             #app-header {
@@ -208,7 +210,10 @@
                                 </div>
                             </div>
                         </div>
-                        <button id="wrap-toggle-btn" onclick="toggleWordWrap()" class="px-2 py-0.5 ml-1 text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-slate-700 rounded shadow-sm flex items-center gap-1 transition-all" title="开启/关闭自动换行" data-i18n-title="title-wrap"><i class="fa-solid fa-text-width"></i> <span data-i18n="btn-wrap">换行</span></button>
+                        <button id="wrap-toggle-btn" onclick="toggleWordWrap()" class="px-2 py-0.5 ml-1 text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-slate-700 rounded shadow-sm flex items-center gap-1 transition-all" title="开启/关闭自动换行">
+                               <i class="fa-solid fa-text-width"></i> 
+                               <span data-i18n="btn-wrap">换行</span>
+                        </button>
                         <div class="h-4 w-[1px] bg-slate-300 dark:bg-slate-600 mx-0.5"></div> 
                         <button onmousedown="event.preventDefault();" onclick="document.execCommand('undo')" class="px-2 py-0.5 text-[11px] font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded shadow-sm transition-all" title="撤销 (Ctrl+Z)">
                                 <i class="fa-solid fa-undo drop-shadow-sm" style="color: #eab308 !important; fill: #eab308 !important;"></i>
@@ -460,6 +465,31 @@
     </div>
 
     <script>
+    // 定义一个状态变量来记录当前是否换行
+    let isWordWrapEnabled = true; 
+
+    function toggleWordWrap() {
+        isWordWrapEnabled = !isWordWrapEnabled;
+        const editor = document.getElementById('note-editor-richtext');
+        const btn = document.getElementById('wrap-toggle-btn');
+        
+        if (isWordWrapEnabled) {
+            // 恢复正常换行
+            editor.classList.remove('no-wrap');
+            btn.classList.remove('bg-emerald-200'); // 移除选中后的颜色
+            btn.querySelector('span').innerText = t('btn-wrap'); // 恢复文字
+        } else {
+            // 切换到单行滚动模式
+            editor.classList.add('no-wrap');
+            btn.classList.add('bg-emerald-200'); // 给予点击后的视觉反馈
+            btn.querySelector('span').innerText = '单行'; // 修改文字
+        }
+    }
+    
+    // ... 其他代码 ...
+</script>
+
+    <script>
         const dict = {
             zh: {
                 'shortcut-title': '快捷键设置',
@@ -486,7 +516,7 @@
                 'color-white': '白', 'color-red': '红', 'color-yellow': '黄', 'color-blue': '蓝', 'color-green': '绿', 'color-black': '黑',
                 'fmt-img': '图', 'btn-recover': '恢复', 'btn-empty': '清空', 'ctx-rename': '重命名分类', 'ctx-delete': '安全删除分类',
                 '未分类': '未分类', '工作': '工作', '生活': '生活',
-                'btn-import-folder': '导入文件夹', 'btn-export-folder': '导出文件夹',
+                'btn-import-folder': '导入文件夹', 'btn-export-folder': '导出文件夹','btn-wrap': '换行', 'title-wrap': '开启/关闭自动换行',
                 'about-soft': '关于软件',
                 'title-img': '插入图片',
                 'title-align-left': '左对齐',
