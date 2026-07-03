@@ -136,14 +136,11 @@
             <div class="px-2 py-1 bg-slate-200 dark:bg-slate-900 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 transition-colors relative z-10">
                 <div class="flex items-center gap-0.5">
                     
-                    <!-- 1. 左侧折叠箭头变成黄色 -->
-                    <div onclick="toggleContentSection()" class="cursor-pointer px-1 py-1 hover:bg-slate-300 dark:hover:bg-slate-700 rounded transition-colors flex items-center justify-center">
-                        <i id="content-section-icon" class="fa-solid fa-chevron-down text-[11px] text-yellow-600 dark:text-yellow-400 transition-transform duration-200"></i>
-                    </div>
+                    <!-- 🚀 核心修改 1：已经把多余的、独立的那个左侧折叠箭头代码彻底删除了 -->
                     
-                    <!-- 2. 分类下拉框的边框、背景、文字全部变成统一的黄色系 -->
+                    <!-- 🚀 核心修改 2：给 select 加上了 dir="rtl"，下拉小箭头完美跑到左边 -->
                     <div class="flex items-center bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-500 px-1 py-0.5 rounded shadow-sm cursor-pointer hover:bg-yellow-100 dark:hover:bg-yellow-800 transition-colors" title="当前笔记归属文件夹（点击切换）">
-                        <select id="note-category-select" onchange="changeNoteCategory(this.value)" class="text-[11px] font-black text-yellow-600 dark:text-yellow-400 bg-transparent outline-none cursor-pointer w-[48px] truncate"></select>
+                        <select id="note-category-select" dir="rtl" onchange="changeNoteCategory(this.value)" class="text-[11px] font-black text-yellow-600 dark:text-yellow-400 bg-transparent outline-none cursor-pointer w-[54px] truncate"></select>
                     </div>
                     
                 </div>
