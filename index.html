@@ -210,7 +210,7 @@
                                 </div>
                             </div>
                         </div>
-                        <button id="wrap-toggle-btn" onclick="toggleWordWrap()" class="px-2 py-0.5 ml-1 text-[11px] font-bold bg-emerald-50 hover:bg-emerald-100 dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-slate-700 rounded shadow-sm flex items-center gap-1 transition-all" title="开启/关闭自动换行">
+                        <button id="wrap-toggle-btn" onclick="toggleWordWrap()" class="px-2 py-0.5 ml-1 text-[11px] font-bold bg-emerald-500 hover:bg-emerald-600 text-white rounded shadow-sm flex items-center gap-1 transition-all" title="开启/关闭自动换行" data-i18n-title="title-wrap">
                                <i class="fa-solid fa-text-width"></i> 
                                <span data-i18n="btn-wrap">换行</span>
                         </button>
@@ -474,15 +474,17 @@
         const btn = document.getElementById('wrap-toggle-btn');
         
         if (isWordWrapEnabled) {
-            // 恢复正常换行
+            // 开启换行：恢复和导入导出一样的正常翠绿色
             editor.classList.remove('no-wrap');
-            btn.classList.remove('bg-emerald-200'); // 移除选中后的颜色
-            btn.querySelector('span').innerText = t('btn-wrap'); // 恢复文字
+            btn.classList.remove('bg-emerald-700');
+            btn.classList.add('bg-emerald-500');
+            btn.querySelector('span').innerText = typeof t === 'function' ? t('btn-wrap') : '换行';
         } else {
-            // 切换到单行滚动模式
+            // 关闭换行（单行模式）：变成深绿色，视觉上像是被“按下”了
             editor.classList.add('no-wrap');
-            btn.classList.add('bg-emerald-200'); // 给予点击后的视觉反馈
-            btn.querySelector('span').innerText = '单行'; // 修改文字
+            btn.classList.remove('bg-emerald-500');
+            btn.classList.add('bg-emerald-700');
+            btn.querySelector('span').innerText = '单行';
         }
     }
     
@@ -1962,6 +1964,7 @@
         }
 
     </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 </body>
