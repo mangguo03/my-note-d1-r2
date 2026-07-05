@@ -1314,10 +1314,31 @@
             catObj.name = name.trim(); saveCloudData(); refreshAllViews();
         }
         
+        // 👇 这里是你刚刚加进来的【创建子分类】逻辑 👇
+        function handleContextMenuNewSubfolder() {
+            const menu = document.getElementById('custom-context-menu');
+            if (menu) menu.classList.add('hidden');
+            
+            if (!rightClickedCategoryId) return;
+            const catObj = categories.find(c => c.id === rightClickedCategoryId);
+            if (!catObj) return;
+
+            const name = prompt(`在【${catObj.name}】下创建子文件夹名称：`);
+            if (!name || name.trim() === "") return;
+
+            categories.push({ id: 'cat_' + Date.now(), name: name.trim(), parentId: rightClickedCategoryId });
+            leftExpandedFolders[rightClickedCategoryId] = true; 
+            
+            saveCloudData(); 
+            refreshAllViews();
+        }
+        // 👆 新增结束 👆
+
         function handleContextMenuDelete() {
             if (!rightClickedCategoryId || rightClickedCategoryId === "未分类") return;
             const catObj = categories.find(c => c.id === rightClickedCategoryId);
             if(!catObj) return;
+            // ... 后面的代码保持不变 ...
             if (confirm(`确定删除分类目录【${catObj.name}】？其内部子目录及所属笔记都将全部进入回收站。`)) {
                 let idsToDelete = [rightClickedCategoryId];
                 function findSubIds(pId) { categories.forEach(c => { if(c.parentId === pId) { idsToDelete.push(c.id); findSubIds(c.id); } }); }
