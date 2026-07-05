@@ -122,29 +122,30 @@
             <!-- 文件 标题栏 -->
             <div class="px-2 py-1 bg-slate-200 dark:bg-slate-900 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-300 dark:hover:bg-slate-800 transition-colors relative z-10" onclick="toggleFolderSection()">
                 
-                <!-- 🚀 锁定为 w-[68px] h-[24px] 且居中对齐 -->
-                <!-- 🌟 把 yellow 全部换成了 blue -->
                 <span class="sync-btn-font text-blue-600 dark:text-blue-400 font-black flex items-center justify-center gap-1 border border-blue-500 bg-blue-50 dark:bg-blue-900/30 w-[68px] h-[24px] rounded shadow-sm">
                     <i id="folder-section-icon" class="fa-solid fa-chevron-down text-[11px] transition-transform duration-200"></i>
                     <span data-i18n="label-folder">文件</span>
                 </span>
                 
                 <div class="flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-0.5 shadow-inner scale-95 origin-right" onclick="event.stopPropagation()">
-                      <!-- 🌟 按钮 1：创建主文件夹 (带蓝色加号文件夹图标) -->
-                      <button onclick="createMainFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="新建主分类 (顶级目录)">
-                             <i class="fa-solid fa-folder-plus text-blue-500"></i>
-                      </button>
-    
-                      <div class="w-px h-3 bg-slate-200 dark:bg-slate-600 mx-0.5"></div> <!-- 分割线 -->
-    
-                      <!-- 🌟 按钮 2：创建子文件夹 (带绿色树状结构图标) -->
-                      <button onclick="createSubFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="在当前选中项下新建子分类">
-                              <i class="fa-solid fa-folder-tree text-emerald-500"></i>
-                      </button>
-                 </div>
+                    <!-- 🌟 按钮 1：创建主文件夹 (带蓝色加号文件夹图标) -->
+                    <button onclick="createMainFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="新建主分类 (顶级目录)">
+                        <i class="fa-solid fa-folder-plus text-blue-500"></i>
+                    </button>
+                    
+                    <div class="w-px h-3 bg-slate-200 dark:bg-slate-600 mx-0.5"></div> <!-- 分割线 -->
+                    
+                    <!-- 🌟 按钮 2：创建子文件夹 (带绿色树状结构图标) -->
+                    <button onclick="createSubFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="在当前选中项下新建子分类">
+                        <i class="fa-solid fa-folder-tree text-emerald-500"></i>
+                    </button>
+                </div>
             </div>
             
+            <!-- 🚨 就是下面这行容器被误删了，现在补回来了！ -->
             <div id="category-tree-container" class="p-1.5 border-b border-slate-200 dark:border-slate-700 bg-slate-100/40 dark:bg-slate-800/40 flex-shrink-0 max-h-[30vh] overflow-y-auto space-y-1"></div>
+            
+            <!-- 当前笔记分类筛选栏 -->
             
             <!-- 当前笔记分类筛选栏 -->
             <div class="px-2 py-1 bg-slate-200 dark:bg-slate-900 flex items-center justify-between flex-shrink-0 select-none border-b border-slate-200 dark:border-slate-700 transition-colors relative z-10">
