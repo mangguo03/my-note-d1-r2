@@ -424,8 +424,14 @@
     </div>
 
     <div id="custom-context-menu" class="hidden fixed bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1.5 w-44 z-[110] text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
-        <button onclick="handleContextMenuRename()" class="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 font-black"><i class="fa-regular fa-pen-to-square text-blue-500"></i> <span data-i18n="ctx-rename">重命名分类</span></button>
-        <button id="ctx-delete-btn" onclick="handleContextMenuDelete()" class="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border-t border-slate-100 dark:border-slate-700 flex items-center gap-2 font-black"><i class="fa-regular fa-trash-can text-red-500"></i> <span data-i18n="ctx-delete">安全删除分类</span></button>
+        <!-- 1. 重命名 -->
+        <button onclick="handleContextMenuRename()" class="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 font-black border-b border-slate-100 dark:border-slate-700/50"><i class="fa-regular fa-pen-to-square text-blue-500 w-4 text-center"></i> <span data-i18n="ctx-rename">重命名</span></button>
+       
+        <!-- 2. 🌟 新增：创建子分类 -->
+        <button onclick="handleContextMenuNewSubfolder()" class="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 font-black"><i class="fa-solid fa-folder-plus text-emerald-500 w-4 text-center"></i> <span data-i18n="ctx-new-sub">+新建子文件</span></button>
+        
+        <!-- 3. 安全删除 -->
+        <button id="ctx-delete-btn" onclick="handleContextMenuDelete()" class="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border-t border-slate-100 dark:border-slate-700 flex items-center gap-2 font-black"><i class="fa-regular fa-trash-can text-red-500 w-4 text-center"></i> <span data-i18n="ctx-delete">删除</span></button>
     </div>
 
     <div id="img-context-menu" class="hidden fixed bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 w-28 z-[9999] text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
@@ -519,7 +525,7 @@
                 'fmt-img': '图', 'btn-recover': '恢复', 'btn-empty': '清空', 'ctx-rename': '重命名分类', 'ctx-delete': '安全删除分类',
                 '未分类': '未分类', '工作': '工作', '生活': '生活',
                 'btn-import-folder': '导入文件夹', 'btn-export-folder': '导出文件夹','btn-wrap': '换行', 'title-wrap': '开启/关闭自动换行',
-                'about-soft': '关于软件',
+                'about-soft': '关于软件','ctx-new-sub': '+新建子文件',
                 'title-img': '插入图片',
                 'title-align-left': '左对齐',
                 'title-align-center': '居中对齐',
@@ -554,7 +560,7 @@
                 'fmt-img': 'Img', 'btn-recover': 'Restore', 'btn-empty': 'Empty', 'ctx-rename': 'Rename', 'ctx-delete': 'Delete safely',
                 '未分类': 'Uncategorized', '工作': 'Work', '生活': 'Life',
                 'btn-import-folder': 'Import Folder', 'btn-export-folder': 'Export Folder',
-                'about-soft': 'About App',
+                'about-soft': 'About App','ctx-new-sub': '+ New Subfolder',
                 'title-img': 'Insert Image',
                 'title-align-left': 'Align Left',
                 'title-align-center': 'Align Center',
