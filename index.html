@@ -1326,23 +1326,33 @@
         }
         
         function createNewCategory() {
-            const name = prompt("创建全新分类文件夹名称：");
-            if (!name || name.trim() === "") return;
+            // 1. 动态生成提示语，让用户明确知道自己正在哪里创建文件夹
+            let promptMsg = "创建新分类文件夹名称：";
             let parentId = null;
-            
-            if (currentFilterCategory !== "全部") { 
-                parentId = currentFilterCategory; 
-            } else {
-                // 💡 你修改的这行代码就在这里，我已经帮你放进去了，语法完美闭合！
-                if(confirm("是创建当前目录下的子文件夹吗？是点确定，不是点取消") && activeNoteId) {
-                    const currentNote = notes.find(n => n.id === activeNoteId);
-                    if(currentNote) parentId = currentNote.category;
+
+            if (currentFilterCategory !== "全部") {
+                const currentCatObj = categories.find(c => c.id === currentFilterCategory);
+                if (currentCatObj) {
+                    promptMsg = `在【${currentCatObj.name}】下创建子文件夹名称：`;
+                    parentId = currentFilterCategory; // 设置为当前目录的子目录
                 }
             }
-            
+
+            // 2. 弹出输入框
+            const name = prompt(promptMsg);
+            if (!name || name.trim() === "") return;
+
+            // 3. 执行创建并保存
             categories.push({ id: 'cat_' + Date.now(), name: name.trim(), parentId: parentId });
             saveCloudData(); 
             refreshAllViews();
+            
+            // 可选：创建完子文件夹后，自动展开父文件夹，方便用户直接看到新文件夹
+            if (parentId) {
+                leftExpandedFolders[parentId] = true;
+                saveCloudData();
+                refreshAllViews();
+            }
         }
         
         function renderCategorySelectOptions() {
@@ -1964,6 +1974,7 @@
         }
 
     </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
