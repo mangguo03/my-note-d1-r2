@@ -1029,6 +1029,11 @@
                     cell.setAttribute('draggable', 'true');
                     
                     cell.addEventListener('dragstart', (e) => {
+                        // 🚨 核心规则 1：拦截系统默认分类的拖拽（不准它们被移走）
+                        if (cat.id === '未分类' || cat.id === '工作' || cat.id === '生活') {
+                            e.preventDefault();
+                            return; 
+                        }
                         e.dataTransfer.effectAllowed = 'move';
                         e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'folder', id: cat.id }));
                         e.dataTransfer.setData('text/folder-id', cat.id);
@@ -1037,14 +1042,51 @@
                     
                     cell.addEventListener('dragend', () => {
                         cell.classList.remove('opacity-40');
-                        document.querySelectorAll('.folder-drop-target').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed'));
+                        document.querySelectorAll('.folder-drop-target').forEach(el => {
+                            // 清理所有可能残留的反馈样式
+                            el.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed', 'border-t-2', 'border-b-2', 'border-blue-500');
+                            delete el.dataset.dropPos;
+                        });
                     });
                     
-                    cell.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; cell.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed'); });
-                    cell.addEventListener('dragleave', () => { cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed'); });
+                    cell.addEventListener('dragover', (e) => { 
+                        e.preventDefault(); 
+                        e.dataTransfer.dropEffect = 'move'; 
+                        
+                        // 🚀 核心计算：判断鼠标悬停的具体位置
+                        const rect = cell.getBoundingClientRect();
+                        const y = e.clientY - rect.top;
+                        const h = rect.height;
+
+                        // 先清除当前单元格的旧样式
+                        cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed', 'border-t-2', 'border-b-2', 'border-blue-500');
+
+                        if (y < h * 0.25) {
+                            // 悬停在上方 25%：插入到前面（顶部蓝线反馈）
+                            cell.dataset.dropPos = 'before';
+                            cell.classList.add('border-t-2', 'border-blue-500');
+                        } else if (y > h * 0.75) {
+                            // 悬停在下方 25%：插入到后面（底部蓝线反馈）
+                            cell.dataset.dropPos = 'after';
+                            cell.classList.add('border-b-2', 'border-blue-500');
+                        } else {
+                            // 悬停在中间 50%：作为子文件夹存入（全局蓝色背景反馈）
+                            cell.dataset.dropPos = 'inside';
+                            cell.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed');
+                        }
+                    });
+                    
+                    cell.addEventListener('dragleave', () => { 
+                        cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed', 'border-t-2', 'border-b-2', 'border-blue-500'); 
+                        delete cell.dataset.dropPos;
+                    });
                     
                     cell.addEventListener('drop', (e) => {
-                        e.preventDefault(); cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed');
+                        e.preventDefault(); 
+                        const dropPos = cell.dataset.dropPos || 'inside';
+                        cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed', 'border-t-2', 'border-b-2', 'border-blue-500');
+                        delete cell.dataset.dropPos;
+
                         let dropData = { type: null, id: null };
                         try { const plainText = e.dataTransfer.getData('text/plain'); if (plainText) dropData = JSON.parse(plainText); } catch (err) {}
 
@@ -1055,7 +1097,9 @@
                             const idx = notes.findIndex(n => n.id === sourceNoteId);
                             if (idx !== -1 && notes[idx].category !== cat.id) { notes[idx].category = cat.id; saveCloudData(); refreshAllViews(); }
                         } else if (sourceFolderId && sourceFolderId !== cat.id) {
-                            if (sourceFolderId === '未分类' || sourceFolderId === '工作' || sourceFolderId === '生活') { alert('系统默认分类不可改变层级！'); return; }
+                            
+                            if (sourceFolderId === '未分类' || sourceFolderId === '工作' || sourceFolderId === '生活') { alert('系统默认分类不可改变层级或移动！'); return; }
+                            
                             let isCircular = false;
                             function checkChild(targetId) {
                                 const children = categories.filter(c => c.parentId === targetId);
@@ -1063,10 +1107,44 @@
                                 children.forEach(c => checkChild(c.id));
                             }
                             checkChild(sourceFolderId);
+
                             if (!isCircular) {
-                                const sourceCat = categories.find(c => c.id === sourceFolderId);
-                                if (sourceCat) { sourceCat.parentId = cat.id; saveCloudData(); refreshAllViews(); }
-                            } else { alert("🚨 不能将父级目录移动到自身子目录下！"); }
+                                const sourceIdx = categories.findIndex(c => c.id === sourceFolderId);
+                                const targetIdx = categories.findIndex(c => c.id === cat.id);
+                                if (sourceIdx === -1 || targetIdx === -1) return;
+
+                                const sourceCat = categories[sourceIdx];
+                                const targetCat = categories[targetIdx];
+
+                                if (dropPos === 'inside') {
+                                    // 动作：变成目标文件夹的子目录
+                                    sourceCat.parentId = targetCat.id;
+                                    leftExpandedFolders[targetCat.id] = true; // 自动展开方便查看
+                                } else {
+                                    // 🚨 核心规则 2：强制系统分类永远置顶，不准拖到它们头上
+                                    if ((targetCat.id === '未分类' || targetCat.id === '工作' || targetCat.id === '生活') && dropPos === 'before') {
+                                        alert('系统核心分类必须置顶，不能排在它们前面哦！');
+                                        return;
+                                    }
+
+                                    // 动作：继承目标文件夹的层级（抽出成同级，或者提拔成顶级）
+                                    sourceCat.parentId = targetCat.parentId;
+
+                                    // 动作：在数组中重新排序以改变 UI 渲染的上下位置
+                                    categories.splice(sourceIdx, 1); // 先把源文件夹拔出来
+                                    const newTargetIdx = categories.findIndex(c => c.id === targetCat.id); // 重新定位目标位置
+                                    
+                                    if (dropPos === 'before') {
+                                        categories.splice(newTargetIdx, 0, sourceCat); // 插前面
+                                    } else {
+                                        categories.splice(newTargetIdx + 1, 0, sourceCat); // 插后面
+                                    }
+                                }
+                                saveCloudData(); 
+                                refreshAllViews();
+                            } else { 
+                                alert("🚨 逻辑冲突：不能将父级目录移动到它自己的子目录下！"); 
+                            }
                         }
                     });
 
