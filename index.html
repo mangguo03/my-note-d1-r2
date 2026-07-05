@@ -1007,18 +1007,28 @@
         }
         
         function refreshAllViews() {
-            document.getElementById('view-tree-list').style.backgroundColor = treeLayoutView === 'list' ? '#3b82f6' : 'transparent';
-            document.getElementById('view-tree-grid').style.backgroundColor = treeLayoutView === 'grid' ? '#3b82f6' : 'transparent';
-            document.getElementById('view-left-list').style.backgroundColor = leftLayoutView === 'list' ? '#3b82f6' : 'transparent';
-            document.getElementById('view-left-grid').style.backgroundColor = leftLayoutView === 'grid' ? '#3b82f6' : 'transparent';
+            // 删除了找不到的 view-tree-list 和 view-tree-grid
+            // 保留下面这两个，因为笔记列表的视图切换按钮还在
+            const viewLeftList = document.getElementById('view-left-list');
+            const viewLeftGrid = document.getElementById('view-left-grid');
             
-            document.getElementById('view-tree-list').style.color = treeLayoutView === 'list' ? '#ffffff' : '';
-            document.getElementById('view-tree-grid').style.color = treeLayoutView === 'grid' ? '#ffffff' : '';
-            document.getElementById('view-left-list').style.color = leftLayoutView === 'list' ? '#ffffff' : '';
-            document.getElementById('view-left-grid').style.color = leftLayoutView === 'grid' ? '#ffffff' : '';
+            if (viewLeftList) {
+                viewLeftList.style.backgroundColor = leftLayoutView === 'list' ? '#3b82f6' : 'transparent';
+                viewLeftList.style.color = leftLayoutView === 'list' ? '#ffffff' : '';
+            }
+            if (viewLeftGrid) {
+                viewLeftGrid.style.backgroundColor = leftLayoutView === 'grid' ? '#3b82f6' : 'transparent';
+                viewLeftGrid.style.color = leftLayoutView === 'grid' ? '#ffffff' : '';
+            }
 
-            renderCategoryTree(); renderCategorySelectOptions(); renderLeftNotesView(); renderTrashBin(); 
-            document.getElementById('trash-count-badge').innerText = trashBin.length;
+            // 继续执行界面的渲染
+            renderCategoryTree(); 
+            renderCategorySelectOptions(); 
+            renderLeftNotesView(); 
+            renderTrashBin(); 
+            
+            const badge = document.getElementById('trash-count-badge');
+            if(badge) badge.innerText = trashBin.length;
         }
         
         function toggleTreeLayout(mode) { treeLayoutView = mode; saveCloudData(); refreshAllViews(); }
