@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -129,9 +130,18 @@
                 </span>
                 
                 <div class="flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-0.5 shadow-inner scale-95 origin-right" onclick="event.stopPropagation()">
-                    <button id="view-tree-list" onclick="toggleTreeLayout('list')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" style="background-color: #3b82f6; color: #ffffff;" title="列表视图"><i class="fa-solid fa-list-ul"></i></button>
-                    <button id="view-tree-grid" onclick="toggleTreeLayout('grid')" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors" style="background-color: transparent;" title="九宫格视图"><i class="fa-solid fa-table-cells-large"></i></button>
-                </div>
+                      <!-- 🌟 按钮 1：创建主文件夹 (带蓝色加号文件夹图标) -->
+                      <button onclick="createMainFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="新建主分类 (顶级目录)">
+                             <i class="fa-solid fa-folder-plus text-blue-500"></i>
+                      </button>
+    
+                      <div class="w-px h-3 bg-slate-200 dark:bg-slate-600 mx-0.5"></div> <!-- 分割线 -->
+    
+                      <!-- 🌟 按钮 2：创建子文件夹 (带绿色树状结构图标) -->
+                      <button onclick="createSubFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="在当前选中项下新建子分类">
+                              <i class="fa-solid fa-folder-tree text-emerald-500"></i>
+                      </button>
+                 </div>
             </div>
             
             <div id="category-tree-container" class="p-1.5 border-b border-slate-200 dark:border-slate-700 bg-slate-100/40 dark:bg-slate-800/40 flex-shrink-0 max-h-[30vh] overflow-y-auto space-y-1"></div>
@@ -471,6 +481,42 @@
     </div>
 
     <script>
+    
+    // 🚀 新增：直接创建顶级主文件夹
+        function createMainFolder() {
+            const name = prompt("创建全新的顶级主分类名称：");
+            if (!name || name.trim() === "") return;
+            
+            // 强制指定 parentId 为 null，永远是一级分类
+            categories.push({ id: 'cat_' + Date.now(), name: name.trim(), parentId: null });
+            saveCloudData(); 
+            refreshAllViews();
+        }
+
+        // 🚀 新增：在当前选中的文件夹下创建子文件夹
+        function createSubFolder() {
+            // 如果用户当前停留在“全笔记展示”状态，提醒他先选个目标
+            if (currentFilterCategory === "全部") {
+                alert("💡 请先在列表中点击选中一个目标文件夹，然后再点击此按钮创建子分类！");
+                return;
+            }
+            
+            const currentCatObj = categories.find(c => c.id === currentFilterCategory);
+            if (!currentCatObj) return;
+
+            const name = prompt(`在【${currentCatObj.name}】下创建子文件夹名称：`);
+            if (!name || name.trim() === "") return;
+
+            // 强制指定 parentId 为当前高亮选中的文件夹
+            categories.push({ id: 'cat_' + Date.now(), name: name.trim(), parentId: currentFilterCategory });
+            
+            // 自动展开目标文件夹，方便看到新创建的子文件
+            leftExpandedFolders[currentFilterCategory] = true; 
+            
+            saveCloudData(); 
+            refreshAllViews();
+        }
+
     // 定义一个状态变量来记录当前是否换行
     let isWordWrapEnabled = true; 
 
@@ -522,7 +568,7 @@
                 'fmt-size': '字号', 'sz-1': '1号 (10px)', 'sz-2': '2号 (13px)', 'sz-3': '3号 (16px)', 'sz-4': '4号 (18px)', 'sz-5': '5号 (24px)', 'sz-6': '6号 (32px)', 'sz-7': '7号 (48px)',
                 'fmt-heading': '标题', 'h1': '一级标题', 'h2': '二级标题', 'h3': '三级标题', 'p': '正文',
                 'color-white': '白', 'color-red': '红', 'color-yellow': '黄', 'color-blue': '蓝', 'color-green': '绿', 'color-black': '黑',
-                'fmt-img': '图', 'btn-recover': '恢复', 'btn-empty': '清空', 'ctx-rename': '重命名', 'ctx-delete': '删除',
+                'fmt-img': '图', 'btn-recover': '恢复', 'btn-empty': '清空', 'ctx-rename': '重命名分类', 'ctx-delete': '安全删除分类',
                 '未分类': '未分类', '工作': '工作', '生活': '生活',
                 'btn-import-folder': '导入文件夹', 'btn-export-folder': '导出文件夹','btn-wrap': '换行', 'title-wrap': '开启/关闭自动换行',
                 'about-soft': '关于软件','ctx-new-sub': '+新建子文件',
@@ -1029,11 +1075,6 @@
                     cell.setAttribute('draggable', 'true');
                     
                     cell.addEventListener('dragstart', (e) => {
-                        // 🚨 核心规则 1：拦截系统默认分类的拖拽（不准它们被移走）
-                        if (cat.id === '未分类' || cat.id === '工作' || cat.id === '生活') {
-                            e.preventDefault();
-                            return; 
-                        }
                         e.dataTransfer.effectAllowed = 'move';
                         e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'folder', id: cat.id }));
                         e.dataTransfer.setData('text/folder-id', cat.id);
@@ -1042,51 +1083,14 @@
                     
                     cell.addEventListener('dragend', () => {
                         cell.classList.remove('opacity-40');
-                        document.querySelectorAll('.folder-drop-target').forEach(el => {
-                            // 清理所有可能残留的反馈样式
-                            el.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed', 'border-t-2', 'border-b-2', 'border-blue-500');
-                            delete el.dataset.dropPos;
-                        });
+                        document.querySelectorAll('.folder-drop-target').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed'));
                     });
                     
-                    cell.addEventListener('dragover', (e) => { 
-                        e.preventDefault(); 
-                        e.dataTransfer.dropEffect = 'move'; 
-                        
-                        // 🚀 核心计算：判断鼠标悬停的具体位置
-                        const rect = cell.getBoundingClientRect();
-                        const y = e.clientY - rect.top;
-                        const h = rect.height;
-
-                        // 先清除当前单元格的旧样式
-                        cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed', 'border-t-2', 'border-b-2', 'border-blue-500');
-
-                        if (y < h * 0.25) {
-                            // 悬停在上方 25%：插入到前面（顶部蓝线反馈）
-                            cell.dataset.dropPos = 'before';
-                            cell.classList.add('border-t-2', 'border-blue-500');
-                        } else if (y > h * 0.75) {
-                            // 悬停在下方 25%：插入到后面（底部蓝线反馈）
-                            cell.dataset.dropPos = 'after';
-                            cell.classList.add('border-b-2', 'border-blue-500');
-                        } else {
-                            // 悬停在中间 50%：作为子文件夹存入（全局蓝色背景反馈）
-                            cell.dataset.dropPos = 'inside';
-                            cell.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed');
-                        }
-                    });
-                    
-                    cell.addEventListener('dragleave', () => { 
-                        cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed', 'border-t-2', 'border-b-2', 'border-blue-500'); 
-                        delete cell.dataset.dropPos;
-                    });
+                    cell.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; cell.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed'); });
+                    cell.addEventListener('dragleave', () => { cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed'); });
                     
                     cell.addEventListener('drop', (e) => {
-                        e.preventDefault(); 
-                        const dropPos = cell.dataset.dropPos || 'inside';
-                        cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed', 'border-t-2', 'border-b-2', 'border-blue-500');
-                        delete cell.dataset.dropPos;
-
+                        e.preventDefault(); cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed');
                         let dropData = { type: null, id: null };
                         try { const plainText = e.dataTransfer.getData('text/plain'); if (plainText) dropData = JSON.parse(plainText); } catch (err) {}
 
@@ -1097,9 +1101,7 @@
                             const idx = notes.findIndex(n => n.id === sourceNoteId);
                             if (idx !== -1 && notes[idx].category !== cat.id) { notes[idx].category = cat.id; saveCloudData(); refreshAllViews(); }
                         } else if (sourceFolderId && sourceFolderId !== cat.id) {
-                            
-                            if (sourceFolderId === '未分类' || sourceFolderId === '工作' || sourceFolderId === '生活') { alert('系统默认分类不可改变层级或移动！'); return; }
-                            
+                            if (sourceFolderId === '未分类' || sourceFolderId === '工作' || sourceFolderId === '生活') { alert('系统默认分类不可改变层级！'); return; }
                             let isCircular = false;
                             function checkChild(targetId) {
                                 const children = categories.filter(c => c.parentId === targetId);
@@ -1107,44 +1109,10 @@
                                 children.forEach(c => checkChild(c.id));
                             }
                             checkChild(sourceFolderId);
-
                             if (!isCircular) {
-                                const sourceIdx = categories.findIndex(c => c.id === sourceFolderId);
-                                const targetIdx = categories.findIndex(c => c.id === cat.id);
-                                if (sourceIdx === -1 || targetIdx === -1) return;
-
-                                const sourceCat = categories[sourceIdx];
-                                const targetCat = categories[targetIdx];
-
-                                if (dropPos === 'inside') {
-                                    // 动作：变成目标文件夹的子目录
-                                    sourceCat.parentId = targetCat.id;
-                                    leftExpandedFolders[targetCat.id] = true; // 自动展开方便查看
-                                } else {
-                                    // 🚨 核心规则 2：强制系统分类永远置顶，不准拖到它们头上
-                                    if ((targetCat.id === '未分类' || targetCat.id === '工作' || targetCat.id === '生活') && dropPos === 'before') {
-                                        alert('系统核心分类必须置顶，不能排在它们前面哦！');
-                                        return;
-                                    }
-
-                                    // 动作：继承目标文件夹的层级（抽出成同级，或者提拔成顶级）
-                                    sourceCat.parentId = targetCat.parentId;
-
-                                    // 动作：在数组中重新排序以改变 UI 渲染的上下位置
-                                    categories.splice(sourceIdx, 1); // 先把源文件夹拔出来
-                                    const newTargetIdx = categories.findIndex(c => c.id === targetCat.id); // 重新定位目标位置
-                                    
-                                    if (dropPos === 'before') {
-                                        categories.splice(newTargetIdx, 0, sourceCat); // 插前面
-                                    } else {
-                                        categories.splice(newTargetIdx + 1, 0, sourceCat); // 插后面
-                                    }
-                                }
-                                saveCloudData(); 
-                                refreshAllViews();
-                            } else { 
-                                alert("🚨 逻辑冲突：不能将父级目录移动到它自己的子目录下！"); 
-                            }
+                                const sourceCat = categories.find(c => c.id === sourceFolderId);
+                                if (sourceCat) { sourceCat.parentId = cat.id; saveCloudData(); refreshAllViews(); }
+                            } else { alert("🚨 不能将父级目录移动到自身子目录下！"); }
                         }
                     });
 
@@ -1392,31 +1360,10 @@
             catObj.name = name.trim(); saveCloudData(); refreshAllViews();
         }
         
-        // 👇 这里是你刚刚加进来的【创建子分类】逻辑 👇
-        function handleContextMenuNewSubfolder() {
-            const menu = document.getElementById('custom-context-menu');
-            if (menu) menu.classList.add('hidden');
-            
-            if (!rightClickedCategoryId) return;
-            const catObj = categories.find(c => c.id === rightClickedCategoryId);
-            if (!catObj) return;
-
-            const name = prompt(`在【${catObj.name}】下创建子文件夹名称：`);
-            if (!name || name.trim() === "") return;
-
-            categories.push({ id: 'cat_' + Date.now(), name: name.trim(), parentId: rightClickedCategoryId });
-            leftExpandedFolders[rightClickedCategoryId] = true; 
-            
-            saveCloudData(); 
-            refreshAllViews();
-        }
-        // 👆 新增结束 👆
-
         function handleContextMenuDelete() {
             if (!rightClickedCategoryId || rightClickedCategoryId === "未分类") return;
             const catObj = categories.find(c => c.id === rightClickedCategoryId);
             if(!catObj) return;
-            // ... 后面的代码保持不变 ...
             if (confirm(`确定删除分类目录【${catObj.name}】？其内部子目录及所属笔记都将全部进入回收站。`)) {
                 let idsToDelete = [rightClickedCategoryId];
                 function findSubIds(pId) { categories.forEach(c => { if(c.parentId === pId) { idsToDelete.push(c.id); findSubIds(c.id); } }); }
@@ -2079,6 +2026,7 @@
         }
 
     </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
