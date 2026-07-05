@@ -129,14 +129,14 @@
                 
                 <div class="flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded p-0.5 shadow-inner scale-95 origin-right" onclick="event.stopPropagation()">
                     <!-- 🌟 按钮 1：创建主文件夹 (带蓝色加号文件夹图标) -->
-                    <button onclick="createMainFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="新建主分类 (顶级目录)">
+                    <button onclick="createMainFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="新建主分类">
                         <i class="fa-solid fa-folder-plus text-blue-500"></i>
                     </button>
                     
                     <div class="w-px h-3 bg-slate-200 dark:bg-slate-600 mx-0.5"></div> <!-- 分割线 -->
                     
                     <!-- 🌟 按钮 2：创建子文件夹 (带绿色树状结构图标) -->
-                    <button onclick="createSubFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="在当前选中项下新建子分类">
+                    <button onclick="createSubFolder()" class="px-1.5 py-0.5 text-[11px] rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors" title="在当前文件下创建子文件">
                         <i class="fa-solid fa-folder-tree text-emerald-500"></i>
                     </button>
                 </div>
@@ -187,11 +187,6 @@
                         <!-- 1. 新笔记 -->
                         <button id="btn-new-note" onclick="createNewNote()" class="w-[58px] h-[20px] text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center justify-center gap-1 transition-colors">
                             <i class="fa-solid fa-plus text-emerald-400 text-sm font-black"></i> <span data-i18n="btn-new-note">新笔记</span>
-                        </button>
-                        
-                        <!-- 2. 新分类 -->
-                        <button onclick="createNewCategory()" class="w-[58px] h-[20px] text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm flex items-center justify-center gap-1 transition-colors">
-                            <i class="fa-solid fa-plus text-emerald-400 text-sm font-black"></i> <span data-i18n="btn-new-folder">新分类</span>
                         </button>
                         
                         <!-- 3. 导入导出 -->
@@ -1385,36 +1380,6 @@
                 categories = categories.filter(c => !idsToDelete.includes(c.id));
                 if (idsToDelete.includes(currentFilterCategory)) currentFilterCategory = "全部";
                 saveCloudData(); refreshAllViews();
-            }
-        }
-        
-        function createNewCategory() {
-            // 1. 动态生成提示语，让用户明确知道自己正在哪里创建文件夹
-            let promptMsg = "创建新分类文件夹名称：";
-            let parentId = null;
-
-            if (currentFilterCategory !== "全部") {
-                const currentCatObj = categories.find(c => c.id === currentFilterCategory);
-                if (currentCatObj) {
-                    promptMsg = `在【${currentCatObj.name}】下创建子文件夹名称：`;
-                    parentId = currentFilterCategory; // 设置为当前目录的子目录
-                }
-            }
-
-            // 2. 弹出输入框
-            const name = prompt(promptMsg);
-            if (!name || name.trim() === "") return;
-
-            // 3. 执行创建并保存
-            categories.push({ id: 'cat_' + Date.now(), name: name.trim(), parentId: parentId });
-            saveCloudData(); 
-            refreshAllViews();
-            
-            // 可选：创建完子文件夹后，自动展开父文件夹，方便用户直接看到新文件夹
-            if (parentId) {
-                leftExpandedFolders[parentId] = true;
-                saveCloudData();
-                refreshAllViews();
             }
         }
         
