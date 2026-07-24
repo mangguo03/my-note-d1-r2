@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -430,14 +429,32 @@
     </div>
 
     <div id="custom-context-menu" class="hidden fixed bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1.5 w-44 z-[110] text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
-        <!-- 1. 重命名 -->
-        <button onclick="handleContextMenuRename()" class="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 font-black border-b border-slate-100 dark:border-slate-700/50"><i class="fa-regular fa-pen-to-square text-blue-500 w-4 text-center"></i> <span data-i18n="ctx-rename">重命名</span></button>
-       
-        <!-- 2. 🌟 新增：创建子分类 -->
-        <button onclick="handleContextMenuNewSubfolder()" class="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 font-black"><i class="fa-solid fa-folder-plus text-emerald-500 w-4 text-center"></i> <span data-i18n="ctx-new-sub">+新建子文件</span></button>
-        
-        <!-- 3. 安全删除 -->
-        <button id="ctx-delete-btn" onclick="handleContextMenuDelete()" class="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border-t border-slate-100 dark:border-slate-700 flex items-center gap-2 font-black"><i class="fa-regular fa-trash-can text-red-500 w-4 text-center"></i> <span data-i18n="ctx-delete">删除</span></button>
+    
+         <!-- 1. 重命名 -->
+         <button onclick="handleContextMenuRename()" class="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 font-black border-b border-slate-100 dark:border-slate-700/50">
+               <i class="fa-regular fa-pen-to-square text-blue-500 w-4 text-center"></i> 
+               <span data-i18n="ctx-rename">重命名分类</span>
+         </button>
+   
+         <!-- 2. 原有：创建子分类 -->
+         <button onclick="handleContextMenuNewSubfolder()" class="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 font-black">
+               <i class="fa-solid fa-folder-plus text-emerald-500 w-4 text-center"></i> 
+               <span data-i18n="ctx-new-sub">+新建子文件</span>
+         </button>
+
+    <!-- 👇👇👇 🌟 在这里新增：创建新笔记功能 👇👇👇 -->
+        <button onclick="handleContextMenuNewNote()" class="w-full text-left px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 font-black">
+              <i class="fa-solid fa-file-circle-plus text-blue-500 w-4 text-center"></i> 
+              <span>+新建笔记</span>
+        </button>
+    <!-- 👆👆👆 🌟 新增结束 👆👆👆 -->
+    
+    <!-- 3. 安全删除 -->
+        <button id="ctx-delete-btn" onclick="handleContextMenuDelete()" class="w-full text-left px-4 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 border-t border-slate-100 dark:border-slate-700 flex items-center gap-2 font-black">
+              <i class="fa-regular fa-trash-can text-red-500 w-4 text-center"></i> 
+              <span data-i18n="ctx-delete">安全删除分类</span>
+        </button>
+    
     </div>
 
     <div id="img-context-menu" class="hidden fixed bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 w-28 z-[9999] text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
@@ -475,8 +492,35 @@
             </div>
         </div>
     </div>
+ <script>
 
-    <script>
+     // 修复：菜单里“新建子文件”的功能
+    function handleContextMenuNewSubfolder() {
+        // 1. 隐藏右键菜单弹窗
+        const contextMenu = document.getElementById('custom-context-menu');
+        if(contextMenu) contextMenu.classList.add('hidden');
+        
+        // 2. 调用系统自带的创建子文件夹函数
+        if (typeof createSubFolder === 'function') {
+            createSubFolder(); 
+        } else {
+            console.error("未找到 createSubFolder 函数，请检查主逻辑！");
+        }
+    }
+
+    // 🌟 新增：菜单里“新建笔记”的功能
+    function handleContextMenuNewNote() {
+        // 1. 隐藏右键菜单弹窗
+        const contextMenu = document.getElementById('custom-context-menu');
+        if(contextMenu) contextMenu.classList.add('hidden');
+        
+        // 2. 调用系统自带的新建笔记函数
+        if (typeof createNewNote === 'function') {
+            createNewNote();
+        } else {
+            console.error("未找到 createNewNote 函数，请检查主逻辑！");
+        }
+    }
     
     // 🚀 新增：直接创建顶级主文件夹
         function createMainFolder() {
@@ -2002,6 +2046,7 @@
         }
 
     </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
