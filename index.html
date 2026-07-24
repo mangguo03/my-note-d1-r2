@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -87,7 +88,29 @@
         .tree-node-wrapper:hover { background-color: #f1f5f9; }
         .active-tree-node { background-color: #3b82f6 !important; color: white !important; }
         #left-notes-container div.active-note-item:hover { background-color: #3b82f6 !important; }
-    </style>
+
+                /* ================= 拖动排序/归档的视觉反馈 ================= */
+.drop-indicator-before {
+    border-top: 3px solid #3b82f6 !important; 
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+.drop-indicator-after {
+    border-bottom: 3px solid #3b82f6 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+.drop-indicator-into {
+    background-color: #dcfce7 !important;
+    border: 2px dashed #22c55e !important;
+    transform: scale(1.02);
+    transition: all 0.1s;
+}
+.dark .drop-indicator-into {
+    background-color: rgba(34, 197, 94, 0.2) !important;
+}    
+
+</style>
 </head>
 <body class="bg-slate-900 font-sans h-screen flex flex-col overflow-hidden text-slate-800 dark:bg-slate-950 dark:text-slate-200 transition-colors duration-300">
     
@@ -521,6 +544,105 @@
             console.error("未找到 createNewNote 函数，请检查主逻辑！");
         }
     }
+
+     // ================= 文件夹拖动排序核心逻辑 =================
+let currentDraggedFolderId = null;
+
+function handleFolderDragStart(e, folderId) {
+    currentDraggedFolderId = folderId;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', folderId); 
+    setTimeout(() => {
+        e.target.classList.add('opacity-40', 'border-dashed', 'border-blue-500');
+    }, 0);
+}
+
+function handleFolderDragOver(e, folderId) {
+    e.preventDefault(); 
+    if (currentDraggedFolderId === folderId) return; 
+
+    const targetEl = e.currentTarget;
+    const rect = targetEl.getBoundingClientRect();
+    const y = e.clientY - rect.top; 
+
+    targetEl.classList.remove('drop-indicator-before', 'drop-indicator-after', 'drop-indicator-into');
+
+    if (y < rect.height * 0.25) {
+        targetEl.classList.add('drop-indicator-before');
+    } else if (y > rect.height * 0.75) {
+        targetEl.classList.add('drop-indicator-after');
+    } else {
+        targetEl.classList.add('drop-indicator-into');
+    }
+}
+
+function handleFolderDragLeave(e) {
+    e.currentTarget.classList.remove('drop-indicator-before', 'drop-indicator-after', 'drop-indicator-into');
+}
+
+function handleFolderDrop(e, targetFolderId) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const targetEl = e.currentTarget;
+    let dropAction = '';
+    
+    if (targetEl.classList.contains('drop-indicator-before')) dropAction = 'before';
+    else if (targetEl.classList.contains('drop-indicator-after')) dropAction = 'after';
+    else if (targetEl.classList.contains('drop-indicator-into')) dropAction = 'into';
+
+    targetEl.classList.remove('drop-indicator-before', 'drop-indicator-after', 'drop-indicator-into');
+    document.querySelectorAll('.opacity-40').forEach(el => el.classList.remove('opacity-40', 'border-dashed', 'border-blue-500'));
+
+    if (!currentDraggedFolderId || currentDraggedFolderId === targetFolderId || !dropAction) return;
+
+    executeFolderDataMove(currentDraggedFolderId, targetFolderId, dropAction);
+}
+
+function executeFolderDataMove(draggedId, targetId, action) {
+    // 💡 注意：这里的 categories 需要改成你实际存放文件夹数据的全局变量名（比如 folderData 或 categories）
+    let folderTree = categories; 
+    let draggedNode = null;
+
+    function removeNode(list, id) {
+        for (let i = 0; i < list.length; i++) {
+            if (String(list[i].id) === String(id)) {
+                return list.splice(i, 1)[0];
+            }
+            if (list[i].children && list[i].children.length > 0) {
+                let found = removeNode(list[i].children, id);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+    
+    draggedNode = removeNode(folderTree, draggedId);
+    if (!draggedNode) return;
+
+    function insertNode(list, targetId, node, actionType) {
+        for (let i = 0; i < list.length; i++) {
+            if (String(list[i].id) === String(targetId)) {
+                if (actionType === 'before') list.splice(i, 0, node);
+                else if (actionType === 'after') list.splice(i + 1, 0, node);
+                else if (actionType === 'into') {
+                    if (!list[i].children) list[i].children = [];
+                    list[i].children.push(node);
+                }
+                return true;
+            }
+            if (list[i].children && list[i].children.length > 0) {
+                if (insertNode(list[i].children, targetId, node, actionType)) return true;
+            }
+        }
+        return false;
+    }
+
+    insertNode(folderTree, targetId, draggedNode, action);
+    
+    // 💡 注意：调用你现有的刷新左侧列表的函数（可能是 renderCategoryTree 或者是 initFolders）
+    renderCategoryTree();  
+}
     
     // 🚀 新增：直接创建顶级主文件夹
         function createMainFolder() {
@@ -580,6 +702,36 @@
         }
     }
     
+       // ================= 智能自动绑定拖拽功能（无需修改原渲染代码） =================
+const folderDragObserver = new MutationObserver(() => {
+    document.querySelectorAll('.tree-node-wrapper').forEach(el => {
+        // 如果还没有绑定过拖拽，就自动加上
+        if (!el.getAttribute('draggable')) {
+            el.setAttribute('draggable', 'true');
+            
+            // 自动从元素原本的 onclick 属性中提取出文件夹 ID
+            const onclickAttr = el.getAttribute('onclick') || '';
+            const match = onclickAttr.match(/['"]([^'"]+)['"]/);
+            const folderId = match ? match[1] : '';
+
+            if (folderId) {
+                el.ondragstart = (e) => handleFolderDragStart(e, folderId);
+                el.ondragover = (e) => handleFolderDragOver(e, folderId);
+                el.ondragleave = (e) => handleFolderDragLeave(e);
+                el.ondrop = (e) => handleFolderDrop(e, folderId);
+            }
+        }
+    });
+});
+
+// 当页面加载完成后，自动开启监听左侧文件夹容器
+window.addEventListener('DOMContentLoaded', () => {
+    const treeContainer = document.getElementById('category-tree-container');
+    if (treeContainer) {
+        folderDragObserver.observe(treeContainer, { childList: true, subtree: true });
+    }
+});
+
     // ... 其他代码 ...
 </script>
 
@@ -2052,5 +2204,6 @@
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1}' crossorigin="anonymous"></script>
 </body>
 </html> 
