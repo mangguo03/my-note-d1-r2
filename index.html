@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -551,7 +550,8 @@ let currentDraggedFolderId = null;
 function handleFolderDragStart(e, folderId) {
     currentDraggedFolderId = folderId;
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', folderId); 
+    // 💡 改进1：统一使用 JSON 格式传输，方便 Drop 时识别是“文件夹”还是“笔记”
+    e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'folder', id: folderId })); 
     setTimeout(() => {
         e.target.classList.add('opacity-40', 'border-dashed', 'border-blue-500');
     }, 0);
@@ -594,66 +594,91 @@ function handleFolderDrop(e, targetFolderId) {
     targetEl.classList.remove('drop-indicator-before', 'drop-indicator-after', 'drop-indicator-into');
     document.querySelectorAll('.opacity-40').forEach(el => el.classList.remove('opacity-40', 'border-dashed', 'border-blue-500'));
 
+    // ================= 💡 改进2：兼容处理拖拽“笔记”进文件夹 =================
+    let dropData = { type: null, id: null };
+    try { 
+        const plainText = e.dataTransfer.getData('text/plain'); 
+        if (plainText && plainText.startsWith('{')) {
+            dropData = JSON.parse(plainText); 
+        }
+    } catch(err) {}
+
+    const sourceNoteId = dropData.type === 'note' ? dropData.id : (typeof draggedNoteId !== 'undefined' ? draggedNoteId : null);
+    
+    // 如果拖进来的是笔记，只执行“归档到文件夹”，不触发文件夹排序
+    if (sourceNoteId) {
+        const idx = notes.findIndex(n => n.id === sourceNoteId);
+        if (idx !== -1 && notes[idx].category !== targetFolderId) { 
+            notes[idx].category = targetFolderId; 
+            saveCloudData(); 
+            refreshAllViews(); 
+        }
+        return; 
+    }
+    // =====================================================================
+
+    // 如果拖的是文件夹，执行视觉排序和层级变更
     if (!currentDraggedFolderId || currentDraggedFolderId === targetFolderId || !dropAction) return;
 
     executeFolderDataMove(currentDraggedFolderId, targetFolderId, dropAction);
 }
 
 function executeFolderDataMove(draggedId, targetId, action) {
-    // 💡 注意：这里的 categories 需要改成你实际存放文件夹数据的全局变量名（比如 folderData 或 categories）
-    let folderTree = categories; 
-    let draggedNode = null;
+    if (!draggedId || !targetId || draggedId === targetId) return;
 
-    function removeNode(list, id) {
-        for (let i = 0; i < list.length; i++) {
-            if (String(list[i].id) === String(id)) {
-                return list.splice(i, 1)[0];
-            }
-            if (list[i].children && list[i].children.length > 0) {
-                let found = removeNode(list[i].children, id);
-                if (found) return found;
-            }
-        }
-        return null;
-    }
-    
-    draggedNode = removeNode(folderTree, draggedId);
-    if (!draggedNode) return;
+    // 1. 在扁平数组中找到拖拽节点和目标节点的索引
+    const draggedIdx = categories.findIndex(c => c.id === draggedId);
+    const targetIdx = categories.findIndex(c => c.id === targetId);
 
-    function insertNode(list, targetId, node, actionType) {
-        for (let i = 0; i < list.length; i++) {
-            if (String(list[i].id) === String(targetId)) {
-                if (actionType === 'before') list.splice(i, 0, node);
-                else if (actionType === 'after') list.splice(i + 1, 0, node);
-                else if (actionType === 'into') {
-                    if (!list[i].children) list[i].children = [];
-                    list[i].children.push(node);
-                }
-                return true;
-            }
-            if (list[i].children && list[i].children.length > 0) {
-                if (insertNode(list[i].children, targetId, node, actionType)) return true;
-            }
+    if (draggedIdx === -1 || targetIdx === -1) return;
+
+    const draggedNode = categories[draggedIdx];
+    const targetNode = categories[targetIdx];
+
+    // 2. 检查循环嵌套 (防止把父文件夹拖入自己的子目录下)
+    if (action === 'into') {
+        let isCircular = false;
+        function checkChild(tid) {
+            const children = categories.filter(c => c.parentId === tid);
+            if (children.some(c => c.id === draggedId)) { isCircular = true; return; }
+            children.forEach(c => checkChild(c.id));
         }
-        return false;
+        checkChild(draggedId);
+        
+        if (isCircular) {
+            alert("🚨 不能将父级目录移动到自身子目录下！");
+            return;
+        }
+        // 系统默认分类不可改变层级
+        if (draggedNode.id === '未分类' || draggedNode.id === '工作' || draggedNode.id === '生活') {
+            alert('系统默认分类不可改变层级！'); 
+            return;
+        }
     }
 
-    insertNode(folderTree, targetId, draggedNode, action);
-    
-    // 💡 注意：调用你现有的刷新左侧列表的函数（可能是 renderCategoryTree 或者是 initFolders）
-    renderCategoryTree();  
+    // 3. 从原位置拔出被拖拽的节点
+    categories.splice(draggedIdx, 1);
+
+    // 重新获取目标节点的新索引（因为拔出一个节点后，数组长度变了）
+    const newTargetIdx = categories.findIndex(c => c.id === targetId);
+
+    // 4. 根据动作(before/after/into)重新插入并修改 parentId
+    if (action === 'into') {
+        draggedNode.parentId = targetNode.id;
+        categories.splice(newTargetIdx + 1, 0, draggedNode); // 插入到目标后面
+        leftExpandedFolders[targetNode.id] = true; // 自动展开目标文件夹
+    } else {
+        draggedNode.parentId = targetNode.parentId; // 同级排序，继承相同的 parentId
+        if (action === 'before') {
+            categories.splice(newTargetIdx, 0, draggedNode);
+        } else if (action === 'after') {
+            categories.splice(newTargetIdx + 1, 0, draggedNode);
+        }
+    }
+
+    saveCloudData();
+    refreshAllViews();
 }
-    
-    // 🚀 新增：直接创建顶级主文件夹
-        function createMainFolder() {
-            const name = prompt("创建全新的顶级主分类名称：");
-            if (!name || name.trim() === "") return;
-            
-            // 强制指定 parentId 为 null，永远是一级分类
-            categories.push({ id: 'cat_' + Date.now(), name: name.trim(), parentId: null });
-            saveCloudData(); 
-            refreshAllViews();
-        }
 
         // 🚀 新增：在当前选中的文件夹下创建子文件夹
         function createSubFolder() {
@@ -702,36 +727,6 @@ function executeFolderDataMove(draggedId, targetId, action) {
         }
     }
     
-       // ================= 智能自动绑定拖拽功能（无需修改原渲染代码） =================
-const folderDragObserver = new MutationObserver(() => {
-    document.querySelectorAll('.tree-node-wrapper').forEach(el => {
-        // 如果还没有绑定过拖拽，就自动加上
-        if (!el.getAttribute('draggable')) {
-            el.setAttribute('draggable', 'true');
-            
-            // 自动从元素原本的 onclick 属性中提取出文件夹 ID
-            const onclickAttr = el.getAttribute('onclick') || '';
-            const match = onclickAttr.match(/['"]([^'"]+)['"]/);
-            const folderId = match ? match[1] : '';
-
-            if (folderId) {
-                el.ondragstart = (e) => handleFolderDragStart(e, folderId);
-                el.ondragover = (e) => handleFolderDragOver(e, folderId);
-                el.ondragleave = (e) => handleFolderDragLeave(e);
-                el.ondrop = (e) => handleFolderDrop(e, folderId);
-            }
-        }
-    });
-});
-
-// 当页面加载完成后，自动开启监听左侧文件夹容器
-window.addEventListener('DOMContentLoaded', () => {
-    const treeContainer = document.getElementById('category-tree-container');
-    if (treeContainer) {
-        folderDragObserver.observe(treeContainer, { childList: true, subtree: true });
-    }
-});
-
     // ... 其他代码 ...
 </script>
 
@@ -1274,50 +1269,21 @@ window.addEventListener('DOMContentLoaded', () => {
                         </div>
                     `;
 
-                    cell.setAttribute('draggable', 'true');
+cell.setAttribute('draggable', 'true');
+                    cell.classList.add('folder-drop-target'); // 确保拖拽目标类名生效
                     
-                    cell.addEventListener('dragstart', (e) => {
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'folder', id: cat.id }));
-                        e.dataTransfer.setData('text/folder-id', cat.id);
-                        setTimeout(() => cell.classList.add('opacity-40'), 0);
+                    // 🌟 统一调用第二步写好的全局拖拽函数
+                    cell.addEventListener('dragstart', (e) => handleFolderDragStart(e, cat.id));
+                    
+                    cell.addEventListener('dragend', (e) => {
+                        currentDraggedFolderId = null;
+                        document.querySelectorAll('.opacity-40').forEach(el => el.classList.remove('opacity-40', 'border-dashed', 'border-blue-500'));
+                        document.querySelectorAll('.folder-drop-target').forEach(el => el.classList.remove('drop-indicator-before', 'drop-indicator-after', 'drop-indicator-into'));
                     });
                     
-                    cell.addEventListener('dragend', () => {
-                        cell.classList.remove('opacity-40');
-                        document.querySelectorAll('.folder-drop-target').forEach(el => el.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed'));
-                    });
-                    
-                    cell.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; cell.classList.add('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed'); });
-                    cell.addEventListener('dragleave', () => { cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed'); });
-                    
-                    cell.addEventListener('drop', (e) => {
-                        e.preventDefault(); cell.classList.remove('bg-blue-100', 'dark:bg-blue-900', 'border-blue-400', 'border-dashed');
-                        let dropData = { type: null, id: null };
-                        try { const plainText = e.dataTransfer.getData('text/plain'); if (plainText) dropData = JSON.parse(plainText); } catch (err) {}
-
-                        const sourceNoteId = dropData.type === 'note' ? dropData.id : draggedNoteId;
-                        const sourceFolderId = dropData.type === 'folder' ? dropData.id : e.dataTransfer.getData('text/folder-id');
-
-                        if (sourceNoteId) {
-                            const idx = notes.findIndex(n => n.id === sourceNoteId);
-                            if (idx !== -1 && notes[idx].category !== cat.id) { notes[idx].category = cat.id; saveCloudData(); refreshAllViews(); }
-                        } else if (sourceFolderId && sourceFolderId !== cat.id) {
-                            if (sourceFolderId === '未分类' || sourceFolderId === '工作' || sourceFolderId === '生活') { alert('系统默认分类不可改变层级！'); return; }
-                            let isCircular = false;
-                            function checkChild(targetId) {
-                                const children = categories.filter(c => c.parentId === targetId);
-                                if (children.some(c => c.id === cat.id)) { isCircular = true; return; }
-                                children.forEach(c => checkChild(c.id));
-                            }
-                            checkChild(sourceFolderId);
-                            if (!isCircular) {
-                                const sourceCat = categories.find(c => c.id === sourceFolderId);
-                                if (sourceCat) { sourceCat.parentId = cat.id; saveCloudData(); refreshAllViews(); }
-                            } else { alert("🚨 不能将父级目录移动到自身子目录下！"); }
-                        }
-                    });
-
+                    cell.addEventListener('dragover', (e) => handleFolderDragOver(e, cat.id));
+                    cell.addEventListener('dragleave', (e) => handleFolderDragLeave(e));
+                    cell.addEventListener('drop', (e) => handleFolderDrop(e, cat.id));
                     cell.onclick = (e) => {
                         if (e.target.closest('.folder-more-btn')) {
                             e.stopPropagation(); rightClickedCategoryId = cat.id;
@@ -2204,6 +2170,7 @@ window.addEventListener('DOMContentLoaded', () => {
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1}' crossorigin="anonymous"></script>
 </body>
 </html> 
