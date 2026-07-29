@@ -148,17 +148,17 @@
                     <span data-i18n="label-folder">文件</span>
                 </span>
                 
-                <div class="flex items-center gap-1 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md p-1 shadow-inner origin-right" onclick="event.stopPropagation()">
+                 <div class="flex items-center gap-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md p-0.5 shadow-inner origin-right" onclick="event.stopPropagation()" style="width: 68px; justify-content: center;">
     
     <!-- 🌟 按钮 1：创建主文件夹 (图标已放大) -->
-    <button onclick="createMainFolder()" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center" title="新建主分类">
+    <button onclick="window.createMainFolder()" class="px-1.5 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center" title="新建主分类">
         <i class="fa-solid fa-folder-plus text-blue-500 text-xs"></i>
     </button>
     
-    <div class="w-px h-4 bg-slate-200 dark:bg-slate-600 mx-0.5"></div> <!-- 分割线 -->
+    <div class="w-px h-3 bg-slate-200 dark:bg-slate-600 mx-0.5"></div> <!-- 分割线 -->
     
     <!-- 🌟 按钮 2：新建笔记 (已修正为 createSidebarNote，图标已放大) -->
-    <button onclick="createSidebarNote()" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center" title="新建笔记">
+    <button onclick="window.createSidebarNote()" class="px-1.5 py-0.5 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center" title="新建笔记">
         <i class="fa-solid fa-file-circle-plus text-emerald-500 text-xs"></i>
     </button>
 
@@ -489,6 +489,10 @@
         <button onclick="window.imgMenuAction('delete')" class="w-full text-left px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2"><i class="fa-regular fa-trash-can"></i> 删除</button>
     </div>
 
+    <div id="editor-paste-menu" class="hidden fixed bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 w-28 z-[9999] text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
+        <button onclick="window.imgMenuAction('paste'); document.getElementById('editor-paste-menu').classList.add('hidden');" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"><i class="fa-solid fa-paste text-sky-500"></i> 粘贴图片</button>
+    </div>
+
     <div id="about-modal" class="hidden fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4 transition-opacity">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden flex flex-col border border-slate-200 dark:border-slate-700">
             <div class="px-5 py-3 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-900/50">
@@ -632,6 +636,7 @@ function createMainFolder() {
     saveCloudData(); 
     refreshAllViews();
 }
+window.createMainFolder = createMainFolder;
 
 // 🌟 紧接着添加到这里的：新建笔记函数
 function createSidebarNote() {
@@ -675,6 +680,7 @@ function createSidebarNote() {
         }
     }, 100);
 }
+window.createSidebarNote = createSidebarNote;
 
     // 如果拖的是文件夹，执行视觉排序和层级变更
     if (!currentDraggedFolderId || currentDraggedFolderId === targetFolderId || !dropAction) return;
@@ -762,6 +768,7 @@ function executeFolderDataMove(draggedId, targetId, action) {
             saveCloudData(); 
             refreshAllViews();
         }
+        window.createSubFolder = createSubFolder;
 
     // 定义一个状态变量来记录当前是否换行
     let isWordWrapEnabled = true; 
@@ -975,6 +982,8 @@ function executeFolderDataMove(draggedId, targetId, action) {
             document.getElementById('custom-context-menu').classList.add('hidden');
             const imgMenu = document.getElementById('img-context-menu');
             if (imgMenu && !imgMenu.contains(e.target)) imgMenu.classList.add('hidden');
+            const editorPasteMenu = document.getElementById('editor-paste-menu');
+            if (editorPasteMenu && !editorPasteMenu.contains(e.target)) editorPasteMenu.classList.add('hidden');
         }, true);
 
         function setTheme(theme) { localStorage.setItem('app-theme', theme); applyTheme(theme); }
@@ -1250,6 +1259,7 @@ function executeFolderDataMove(draggedId, targetId, action) {
             const allData = { notes, categories, categoryColors, trashBin, folderTreeRelations, leftExpandedFolders };
             try { await fetch('/api/sync', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify(allData) }); } catch (error) {}
         }
+        window.saveCloudData = saveCloudData;
         
         function refreshAllViews() {
             // 删除了找不到的 view-tree-list 和 view-tree-grid
@@ -1275,6 +1285,7 @@ function executeFolderDataMove(draggedId, targetId, action) {
             const badge = document.getElementById('trash-count-badge');
             if(badge) badge.innerText = trashBin.length;
         }
+        window.refreshAllViews = refreshAllViews;
         
         function toggleTreeLayout(mode) { treeLayoutView = mode; saveCloudData(); refreshAllViews(); }
         function toggleLeftView(mode) { leftLayoutView = mode; saveCloudData(); refreshAllViews(); }
@@ -1520,6 +1531,7 @@ cell.setAttribute('draggable', 'true');
                 }
             }, 10);
         }
+        window.createNewNote = createNewNote;
         
         function openNote(id) {
             activeNoteId = id; const target = notes.find(n => n.id === id);
@@ -1712,7 +1724,21 @@ cell.setAttribute('draggable', 'true');
                    if (lockBtn) { e.preventDefault(); e.stopPropagation(); window.toggleImgLock(lockBtn, e); }
                });
     
-               editor.addEventListener('contextmenu', (e) => { const wrapper = e.target.closest('.custom-img-wrapper'); if (wrapper) { e.preventDefault(); showImgContextMenu(e, wrapper); } });
+                editor.addEventListener('contextmenu', (e) => { 
+                    const wrapper = e.target.closest('.custom-img-wrapper'); 
+                    if (wrapper) { 
+                        e.preventDefault(); 
+                        showImgContextMenu(e, wrapper); 
+                    } else if (window.copiedImageWrapper) {
+                        e.preventDefault();
+                        const pasteMenu = document.getElementById('editor-paste-menu');
+                        if (pasteMenu) {
+                            pasteMenu.classList.remove('hidden');
+                            pasteMenu.style.left = e.clientX + 'px';
+                            pasteMenu.style.top = e.clientY + 'px';
+                        }
+                    }
+                });
                editor.addEventListener('dblclick', (e) => { const wrapper = e.target.closest('.custom-img-wrapper'); if (wrapper) { e.preventDefault(); showImgContextMenu(e, wrapper); } });
                editor.addEventListener('dragover', (e) => { if (window.draggingImageNode) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; } });
 
