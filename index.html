@@ -1729,7 +1729,7 @@ cell.setAttribute('draggable', 'true');
                     if (wrapper) { 
                         e.preventDefault(); 
                         showImgContextMenu(e, wrapper); 
-                    } else if (window.copiedImageWrapper) {
+                    } else if (copiedImageWrapper) {
                         e.preventDefault();
                         const pasteMenu = document.getElementById('editor-paste-menu');
                         if (pasteMenu) {
