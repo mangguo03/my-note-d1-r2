@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -153,14 +152,14 @@
     
     <!-- 🌟 按钮 1：创建主文件夹 (图标已放大) -->
     <button onclick="createMainFolder()" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center" title="新建主分类">
-        <i class="fa-solid fa-folder-plus text-blue-500 text-base"></i>
+        <i class="fa-solid fa-folder-plus text-blue-500 text-xs"></i>
     </button>
     
     <div class="w-px h-4 bg-slate-200 dark:bg-slate-600 mx-0.5"></div> <!-- 分割线 -->
     
     <!-- 🌟 按钮 2：新建笔记 (已修正为 createSidebarNote，图标已放大) -->
     <button onclick="createSidebarNote()" class="px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center" title="新建笔记">
-        <i class="fa-solid fa-file-circle-plus text-emerald-500 text-base"></i>
+        <i class="fa-solid fa-file-circle-plus text-emerald-500 text-xs"></i>
     </button>
 
 </div>
@@ -485,6 +484,7 @@
     <div id="img-context-menu" class="hidden fixed bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1 w-28 z-[9999] text-xs font-bold text-slate-700 dark:text-slate-200 select-none">
         <button onclick="window.imgMenuAction('download')" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"><i class="fa-solid fa-download text-blue-500"></i> 下载</button>
         <button onclick="window.imgMenuAction('copy')" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2"><i class="fa-regular fa-copy text-emerald-500"></i> 复制</button>
+        <button onclick="window.imgMenuAction('paste')" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700"><i class="fa-solid fa-paste text-sky-500"></i> 粘贴</button>
         <button onclick="window.imgMenuAction('cut')" class="w-full text-left px-3 py-2 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2 border-b border-slate-100 dark:border-slate-700"><i class="fa-solid fa-scissors text-amber-500"></i> 剪切</button>
         <button onclick="window.imgMenuAction('delete')" class="w-full text-left px-3 py-2 hover:bg-red-50 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 flex items-center gap-2"><i class="fa-regular fa-trash-can"></i> 删除</button>
     </div>
@@ -636,8 +636,8 @@ function createMainFolder() {
 // 🌟 紧接着添加到这里的：新建笔记函数
 function createSidebarNote() {
     // 自动获取当前选择的文件夹（没有选中就放入'未分类'）
-    const targetCategory = (typeof currentCategoryId !== 'undefined' && currentCategoryId) 
-        ? currentCategoryId 
+    const targetCategory = (typeof currentFilterCategory !== 'undefined' && currentFilterCategory !== '全部') 
+        ? currentFilterCategory 
         : '未分类';
 
     // 创建新笔记数据
@@ -653,8 +653,8 @@ function createSidebarNote() {
     // 塞入笔记数组最顶部并选中它
     if (typeof notes !== 'undefined') {
         notes.unshift(newNote);
-        if (typeof currentNoteId !== 'undefined') {
-            currentNoteId = newNote.id; 
+        if (typeof activeNoteId !== 'undefined') {
+            activeNoteId = newNote.id; 
         }
     }
 
@@ -1659,6 +1659,7 @@ cell.setAttribute('draggable', 'true');
         window.imgDragEnd = function(e) { e.target.classList.remove('dragging'); window.draggingImageNode = null; handleEditorInput(); };
 
         let currentImageWrapper = null;
+        let copiedImageWrapper = null;
         window.showImgContextMenu = function(e, wrapper) { currentImageWrapper = wrapper; const menu = document.getElementById('img-context-menu'); menu.classList.remove('hidden'); menu.style.left = e.clientX + 'px'; menu.style.top = e.clientY + 'px'; };
 
         window.imgMenuAction = async function(action) {
@@ -1666,43 +1667,34 @@ cell.setAttribute('draggable', 'true');
             if (!currentImageWrapper) return;
             const img = currentImageWrapper.querySelector('img');
 
-            const writeToClipboard = () => {
-                return new Promise((resolve, reject) => {
-                    try {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.naturalWidth || img.width;
-                        canvas.height = img.naturalHeight || img.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        canvas.toBlob(async (blob) => {
-                            if (!blob) throw new Error('Blob 生成失败');
-                            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                            resolve();
-                        }, 'image/png');
-                    } catch (err) { reject(err); }
-                });
-            };
-
             if (action === 'download') {
                 const a = document.createElement('a'); a.href = img.src; a.download = 'image_' + Date.now() + '.jpg'; a.click();
             } else if (action === 'copy') {
-                try {
-                    await writeToClipboard();
-                    // 弹窗已移除，静默复制
-                } catch(err) {
-                    console.error('复制失败', err);
-                }
+                copiedImageWrapper = currentImageWrapper.cloneNode(true);
             } else if (action === 'cut') {
-                try {
-                    await writeToClipboard();
-                    currentImageWrapper.remove();
-                    handleEditorInput();
-                    // 弹窗已移除，静默剪切
-                } catch(err) {
-                    console.error('剪切失败', err);
+                copiedImageWrapper = currentImageWrapper.cloneNode(true);
+                currentImageWrapper.remove();
+                handleEditorInput();
+            } else if (action === 'paste') {
+                if (!copiedImageWrapper) return;
+                const clone = copiedImageWrapper.cloneNode(true);
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    range.deleteContents();
+                    range.insertNode(clone);
+                    const space = document.createTextNode('\u00A0');
+                    range.collapse(false);
+                    range.insertNode(space);
+                    range.setStartAfter(space);
+                    range.setEndAfter(space);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                } else {
+                    document.getElementById('note-editor-richtext').appendChild(clone);
                 }
+                handleEditorInput();
             } else if (action === 'delete') {
-                // 确认弹窗已移除，点击直接静默删除
                 currentImageWrapper.remove();
                 handleEditorInput(); 
             }
@@ -2229,6 +2221,7 @@ cell.setAttribute('draggable', 'true');
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
 <script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1}' crossorigin="anonymous"></script>
 <script type="module" src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"c67fd155821c4d4bb15f60ba3dc67861","r":1}' crossorigin="anonymous"></script>
