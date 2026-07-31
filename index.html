@@ -616,11 +616,13 @@ function handleFolderDrop(e, targetFolderId) {
             saveCloudData(); 
             refreshAllViews(); 
         }
-        
-        // 你第一步修改的 executeFolderDataMove 结束于此...
-    saveCloudData();
-    refreshAllViews();
+        return;
     }
+
+    // 如果拖的是文件夹，执行视觉排序和层级变更
+    if (!currentDraggedFolderId || currentDraggedFolderId === targetFolderId || !dropAction) return;
+
+    executeFolderDataMove(currentDraggedFolderId, targetFolderId, dropAction);
 }
 
 // 🚀 新增：直接创建顶级主文件夹
