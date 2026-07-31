@@ -620,8 +620,9 @@ function handleFolderDrop(e, targetFolderId) {
         // 你第一步修改的 executeFolderDataMove 结束于此...
     saveCloudData();
     refreshAllViews();
+    }
 }
-    
+
 // 🚀 新增：直接创建顶级主文件夹
 function createMainFolder() {
     const name = prompt("创建全新的顶级主分类名称：");
@@ -677,12 +678,6 @@ function createSidebarNote() {
     }, 100);
 }
 window.createSidebarNote = createSidebarNote;
-
-    // 如果拖的是文件夹，执行视觉排序和层级变更
-    if (!currentDraggedFolderId || currentDraggedFolderId === targetFolderId || !dropAction) return;
-
-    executeFolderDataMove(currentDraggedFolderId, targetFolderId, dropAction);
-}
 
 function executeFolderDataMove(draggedId, targetId, action) {
     if (!draggedId || !targetId || draggedId === targetId) return;
@@ -1825,7 +1820,7 @@ cell.setAttribute('draggable', 'true');
                               
                               // 🚨 核心修复 3：使用 <div> 强制换行包裹，防止多张图片变成连体婴！
                               // 注意：这是修改后的超级换行隔断版，请替换掉原来的 const imgHTML = ... 那行代码
-                              const imgHTML = `<div style="text-align: left;">&#8203;<span class="custom-img-wrapper locked" contenteditable="false" draggable="true" ondragstart="window.imgDragStart(event)" ondragend="window.imgDragEnd(event)"><img src="${compressedBase64}" alt="图片" /><span class="img-lock-btn locked" title="${t('title-unlock')}" data-i18n-title="title-unlock" contenteditable="false"><i class="fa-solid fa-lock"></i></span></span></div><div><br></div>`;
+                              const imgHTML = `<div style="text-align: left;">&#8203;<span class="custom-img-wrapper locked" contenteditable="false" draggable="true" ondragstart="window.imgDragStart(event)" ondragend="window.imgDragEnd(event)"><img src="${base64Image}" alt="图片" /><span class="img-lock-btn locked" title="${t('title-unlock')}" data-i18n-title="title-unlock" contenteditable="false"><i class="fa-solid fa-lock"></i></span></span></div><div><br></div>`;
                               
                               execCmd('insertHTML', imgHTML);
                           };
@@ -1877,9 +1872,36 @@ cell.setAttribute('draggable', 'true');
                                     selection.removeAllRanges();
                                     selection.addRange(range);
                                 }
-                            }
-                            handleEditorInput(); // 这里会自动触发我们之前改过的防抖保存逻辑
-                        }
+                             }
+                             handleEditorInput(); // 这里会自动触发我们之前改过的防抖保存逻辑
+                         }
+                  });
+
+                 // 🎯 补充：对 Ctrl+V 的键盘级兜底，确保应用内复制的图片一定能粘贴
+                 editor.addEventListener('keydown', (e) => {
+                     if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+                         if (copiedImageWrapper) {
+                             e.preventDefault();
+                             const selection = window.getSelection();
+                             if (selection.rangeCount > 0) {
+                                 const range = selection.getRangeAt(0);
+                                 range.deleteContents();
+                                 const clone = copiedImageWrapper.cloneNode(true);
+                                 range.insertNode(clone);
+                                 const space = document.createTextNode('\u00A0');
+                                 range.collapse(false);
+                                 range.insertNode(space);
+                                 range.setStartAfter(space);
+                                 range.setEndAfter(space);
+                                 selection.removeAllRanges();
+                                 selection.addRange(range);
+                             } else {
+                                 const clone = copiedImageWrapper.cloneNode(true);
+                                 document.getElementById('note-editor-richtext').appendChild(clone);
+                             }
+                             handleEditorInput();
+                         }
+                     }
                  });
 
                 // ======================================================================
