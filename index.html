@@ -88,6 +88,144 @@
         .active-tree-node { background-color: #3b82f6 !important; color: white !important; }
         #left-notes-container div.active-note-item:hover { background-color: #3b82f6 !important; }
 
+        /* ================= 拖动排序/归档的视觉反馈 ================= */
+        .drop-indicator-before {
+            border-top: 3px solid #3b82f6 !important; 
+            border-top-left-radius: 0 !important;
+            border-top-right-radius: 0 !important;
+        }
+        .drop-indicator-after {
+            border-bottom: 3px solid #3b82f6 !important;
+            border-bottom-left-radius: 0 !important;
+            border-bottom-right-radius: 0 !important;
+        }
+        .drop-indicator-into {
+            background-color: #dcfce7 !important;
+            border: 2px dashed #22c55e !important;
+            transform: scale(1.02);
+            transition: all 0.1s;
+        }
+        .dark .drop-indicator-into {
+            background-color: rgba(34, 197, 94, 0.2) !important;
+        }    
+    </style>
+</head>
+<body class="bg-slate-900 font-sans h-screen flex flex-col overflow-hidden text-slate-800 dark:bg-slate-950 dark:text-slate-200 transition-colors duration-300">
+    
+    <div id="auth-overlay" class="fixed inset-0 bg-slate-900 z-[9999] flex items-center justify-center transition-opacity" style="-webkit-app-region: no-drag;">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 flex flex-col gap-4">
+            <h2 class="text-2xl font-black mb-2 text-center text-slate-800" id="auth-title">登入云端工作台</h2>
+            <div id="auth-error" class="hidden bg-red-100 text-red-600 p-2 rounded text-sm font-bold text-center"></div>
+            <input type="text" id="auth-username" placeholder="请输入账号" class="w-full border-2 border-slate-200 p-3 rounded-xl outline-none focus:border-blue-500 font-bold text-slate-700">
+            <input type="password" id="auth-password" placeholder="请输入密码" class="w-full border-2 border-slate-200 p-3 rounded-xl outline-none focus:border-blue-500 font-bold text-slate-700">
+            <button onclick="handleAuth()" id="auth-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-3 rounded-xl shadow-md mt-2">登入</button>
+            <div class="text-center text-sm font-bold text-slate-500 cursor-pointer hover:text-blue-600 mt-2" onclick="toggleAuthMode()" id="auth-toggle">没有账号？点击注册新账号</div>
+        </div>
+    </div>
+
+    <header id="app-header" class="bg-slate-800 text-slate-200 py-0.5 px-3 flex items-center select-none border-b border-slate-700 relative z-[70]" style="-webkit-app-region: drag;">
+        <div class="flex items-center gap-1.5 pointer-events-none" style="-webkit-app-region: no-drag;">
+            <i class="fa-solid fa-pen-to-square text-emerald-500 text-sm"></i>
+            <span class="font-black tracking-wide text-sm bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-300" data-i18n="app-title">轻云记</span>
+        </div>
+    </header>
+
+    <input type="file" id="import-md-input" accept=".md" class="hidden" onchange="handleImportFile(event, 'md')">
+    <input type="file" id="import-txt-input" accept=".txt" class="hidden" onchange="handleImportFile(event, 'txt')">
+    <input type="file" id="import-folder-input" webkitdirectory directory multiple class="hidden" onchange="handleFolderImport(event)">
+
+    <div id="workspace-container" class="flex flex-1 overflow-hidden w-full bg-slate-200 dark:bg-slate-900 transition-colors duration-300">
+        
+        <aside id="left-panel" class="bg-slate-<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>轻云记</title>
+    
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+    </script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/turndown/dist/turndown.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/default.css">
+    <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0-rc.2/index.min.js"></script>
+    
+    <style>
+        /* 💡 自动换行控制逻辑 */
+        .no-wrap { white-space: nowrap !important; overflow-x: auto !important; }
+        /* 💡 解决双标题栏：当作为独立桌面 PWA 运行时，自动隐藏网页内置的顶栏 */
+        @media (display-mode: standalone), (display-mode: window-controls-overlay) {
+            #app-header {
+                display: none !important;
+            }
+        }
+        body { font-size: 16px; }
+        .md-preview { font-size: 16px; }
+        .panel-large-text { font-size: 12px !important; font-weight: 800 !important; }
+        .sync-btn-font { font-size: 12px !important; font-weight: 900 !important; }
+
+        [draggable="true"] {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-user-drag: element; 
+            touch-action: pan-y; 
+        }
+        
+        .md-preview h1, .md-preview h1 *, .md-preview h1 font { font-size: 2.6rem !important; font-weight: 800 !important; line-height: 1.3 !important; }
+        .md-preview h2, .md-preview h2 *, .md-preview h2 font { font-size: 2.1rem !important; font-weight: 700 !important; line-height: 1.3 !important; }
+        .md-preview h3, .md-preview h3 *, .md-preview h3 font { font-size: 1.8rem !important; font-weight: 600 !important; line-height: 1.3 !important; }
+        .md-preview p, .md-preview div { margin-bottom: 0.3rem; line-height: 1.3; font-size: 16px !important; }
+
+        .md-preview font[size="1"] { font-size: 10px !important; }
+        .md-preview font[size="2"] { font-size: 13px !important; }
+        .md-preview font[size="3"] { font-size: 16px !important; }
+        .md-preview font[size="4"] { font-size: 18px !important; }
+        .md-preview font[size="5"] { font-size: 24px !important; }
+        .md-preview font[size="6"] { font-size: 32px !important; }
+        .md-preview font[size="7"] { font-size: 48px !important; }
+        
+        .md-preview ul { list-style-type: disc !important; margin-left: 1.5rem !important; padding-left: 0.5rem; margin-bottom: 0.5rem; }
+        .md-preview ol { list-style-type: decimal !important; margin-left: 1.5rem !important; padding-left: 0.5rem; margin-bottom: 0.5rem; }
+        .md-preview li { display: list-item !important; margin-bottom: 0.25rem; }
+
+        .md-preview code { background-color: #fee2e2; padding: 0.2em 0.5em; border-radius: 6px; font-size: 95%; font-family: monospace; color: #be185d; }
+        .md-preview pre { background-color: #1e293b; color: #f8fafc; padding: 1.5rem; border-radius: 10px; overflow-x: auto; margin-bottom: 1.5rem; }
+        .md-preview pre code { background-color: transparent; color: inherit; padding: 0; font-size: 17px; }
+        .md-preview a { color: #2563eb; text-decoration: underline; font-weight: bold; cursor: pointer; transition: all 0.2; }
+        .md-preview a:hover { color: #1e40af; text-decoration-style: dashed; }
+
+        .custom-img-wrapper { position: relative; display: inline-block; margin: 14px 0; vertical-align: bottom; max-width: 100%; z-index: 1; }
+        .custom-img-wrapper img { max-width: 100%; height: auto; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: block; transition: outline 0.2s, box-shadow 0.2s; }
+        .custom-img-wrapper:not(.locked) img { outline: 3px dashed #eab308; outline-offset: 2px; cursor: nwse-resize; }
+        .custom-img-wrapper.locked img { user-select: none; -webkit-user-drag: none; outline: none !important; box-shadow: none !important; }
+        .custom-img-wrapper.locked::after { content: ''; position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 10; cursor: grab; }
+        .custom-img-wrapper.locked:active::after { cursor: grabbing; }
+        .img-lock-btn { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; background-color: #22c55e; color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20; box-shadow: 0 2px 5px rgba(0,0,0,0.2); font-size: 10px; transition: all 0.2s; }
+        .img-lock-btn.locked { background-color: #ef4444; }
+
+        [contenteditable]:empty:before { content: attr(placeholder); color: #cbd5e1; pointer-events: none; display: block; }
+        .resizer { width: 6px; cursor: col-resize; background-color: #e2e8f0; transition: background-color 0.2; position: relative; z-index: 10; }
+        .resizer:hover, .resizer.resizing { background-color: #2563eb; width: 6px; }
+        .no-select { user-select: none; -webkit-user-select: none; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dragging-node { opacity: 0.4; border: 2px dashed #3b82f6 !important; background-color: #eff6ff !important; }
+        
+        .tree-node-wrapper:hover { background-color: #f1f5f9; }
+        .active-tree-node { background-color: #3b82f6 !important; color: white !important; }
+        #left-notes-container div.active-note-item:hover { background-color: #3b82f6 !important; }
+
                 /* ================= 拖动排序/归档的视觉反馈 ================= */
 .drop-indicator-before {
     border-top: 3px solid #3b82f6 !important; 
