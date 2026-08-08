@@ -25,19 +25,57 @@
         .no-wrap { white-space: nowrap !important; overflow-x: auto !important; }
         /* 💡 解决双标题栏：当作为独立桌面 PWA 运行时，自动隐藏网页内置的顶栏 */
         @media (display-mode: standalone), (display-mode: window-controls-overlay) {
-    /* 不再 display: none，而是让它变成一条很细的拖拽把手 */
+    /* 顶栏：作为窗口拖拽区，同时显示图标和标题 */
     #app-header {
         display: flex !important;
-        height: 32px;               /* 你可以改成合适的宽度 */
-        background-color: transparent; /* 完全透明，视觉上无感 */
-        border-bottom: none;
-        pointer-events: auto;  
+        height: 40px;               /* 高度根据你的设计调整 */
+        align-items: center;
+        padding: 0 12px;
+        
+        /* 半透明背景，既能看到内容又融入界面 */
+        background-color: rgba(30, 41, 59, 0.75); 
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        
+        /* 拖拽窗口 */
+        -webkit-app-region: drag;
+        
+        /* 如果支持，可以加个毛玻璃效果 */
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        
+        /* 让整个header可点击拖拽 */
+        pointer-events: auto;
     }
 
-    /* 如果顶栏里的内容不希望影响视觉，可以隐藏内部文字和图标 */
-    #app-header .pointer-events-none,
-    #app-header .select-none {
-        visibility: hidden;  /* 或者 opacity: 0; */
+    /* 内部图标和文字保持可见，但禁止鼠标交互（避免干扰拖拽） */
+    #app-header .pointer-events-none {
+        pointer-events: none;
+        -webkit-app-region: no-drag; /* 可选，但加了会更安全 */
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        visibility: visible !important; /* 确保显示 */
+    }
+
+    /* 如果有其他直接子元素也设置不可交互（如果在header内还有按钮） */
+    #app-header > * {
+        pointer-events: none;
+    }
+
+    /* 图标颜色保持原有视觉效果 */
+    #app-header .fa-pen-to-square {
+        color: #10b981;
+        font-size: 16px;
+    }
+
+    /* 标题文字样式调整，避免透明渐变导致看不清 */
+    #app-header span[data-i18n="app-title"] {
+        color: #f1f5f9;
+        font-weight: 900;
+        font-size: 14px;
+        letter-spacing: 0.02em;
+        background: none;                /* 去掉原来的渐变透明 */
+        -webkit-text-fill-color: currentColor; /* 兼容 */
     }
 }
         body { font-size: 16px; }
