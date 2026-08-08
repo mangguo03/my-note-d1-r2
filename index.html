@@ -25,10 +25,21 @@
         .no-wrap { white-space: nowrap !important; overflow-x: auto !important; }
         /* 💡 解决双标题栏：当作为独立桌面 PWA 运行时，自动隐藏网页内置的顶栏 */
         @media (display-mode: standalone), (display-mode: window-controls-overlay) {
-            #app-header {
-                display: none !important;
-            }
-        }
+    /* 不再 display: none，而是让它变成一条很细的拖拽把手 */
+    #app-header {
+        display: flex !important;
+        height: 32px;               /* 你可以改成合适的宽度 */
+        background-color: transparent; /* 完全透明，视觉上无感 */
+        border-bottom: none;
+        pointer-events: auto;  
+    }
+
+    /* 如果顶栏里的内容不希望影响视觉，可以隐藏内部文字和图标 */
+    #app-header .pointer-events-none,
+    #app-header .select-none {
+        visibility: hidden;  /* 或者 opacity: 0; */
+    }
+}
         body { font-size: 16px; }
         .md-preview { font-size: 16px; }
         .panel-large-text { font-size: 12px !important; font-weight: 800 !important; }
