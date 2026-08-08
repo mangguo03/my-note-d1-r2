@@ -28,9 +28,9 @@
     /* 顶栏：作为窗口拖拽区，同时显示图标和标题 */
     #app-header {
         display: flex !important;
-        height: 40px;               /* 高度根据你的设计调整 */
+        height: 28px;               /* 高度根据你的设计调整 */
         align-items: center;
-        padding: 0 12px;
+        padding: 0 8px;
         
         /* 半透明背景，既能看到内容又融入界面 */
         background-color: rgba(30, 41, 59, 0.75); 
@@ -65,14 +65,14 @@
     /* 图标颜色保持原有视觉效果 */
     #app-header .fa-pen-to-square {
         color: #10b981;
-        font-size: 16px;
+        font-size: 13px;
     }
 
     /* 标题文字样式调整，避免透明渐变导致看不清 */
     #app-header span[data-i18n="app-title"] {
         color: #f1f5f9;
         font-weight: 900;
-        font-size: 14px;
+        font-size: 12px;
         letter-spacing: 0.02em;
         background: none;                /* 去掉原来的渐变透明 */
         -webkit-text-fill-color: currentColor; /* 兼容 */
